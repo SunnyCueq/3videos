@@ -8,7 +8,7 @@
  *        Copyright: (C) 2002-2023 4homepages.de                          *
  *            Email: 4images@4homepages.de                                *
  *              Web: http://www.4homepages.de                             *
- *    Scriptversion: 1.10                                                 *
+ *    Scriptversion: 1.110                                                 *
  *                                                                        *
  **************************************************************************
  *                                                                        *
