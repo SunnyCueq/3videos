@@ -1117,7 +1117,7 @@ function get_subcategories($parent_id) {
     }
   }
 
-  $num_subs = sizeof($visible_cat_cache);
+  $num_subs = count($visible_cat_cache);
   $sub_cat_list = "";
   $i = 1;
   foreach ($visible_cat_cache as $subcat_id) {
@@ -1160,14 +1160,14 @@ function get_categories($cat_id = 0) {
     return "";
   }
 
-  $total = sizeof($visible_cat_cache);
+  $total = count($visible_cat_cache);
   $table_columns = (intval($config['cat_cells'])) ? intval($config['cat_cells']) : 2;
   if ($total <= $table_columns) {
     $table_rows = 1;
   }
   else {
     $table_rows = $total / $table_columns;
-    if ($total >= $table_columns && !is_integer($table_rows)) {
+    if ($total >= $table_columns && !is_int($table_rows)) {
       $table_rows = intval($table_rows) + 1;
     }
   }
@@ -1220,7 +1220,7 @@ function get_categories($cat_id = 0) {
     $count2++;
     $categories .= "</td>\n</tr>\n";
 
-    if ($count == $table_rows && $count2 < sizeof($visible_cat_cache)) {
+    if ($count == $table_rows && $count2 < count($visible_cat_cache)) {
       $categories .= "</table></td>\n";
       $categories .= "<td valign=\"top\" width=\"".$cattable_width."\" class=\"catbgcolor\">\n";
       $categories .= "<table border=\"0\" cellpadding=\"".$config['cat_table_cellpadding']."\" cellspacing=\"".$config['cat_table_cellspacing']."\">\n";
@@ -1232,7 +1232,7 @@ function get_categories($cat_id = 0) {
       }
       else {
         $table_rows = $total / $table_columns;
-        if ($total >= $table_columns && !is_integer($table_rows)) {
+        if ($total >= $table_columns && !is_int($table_rows)) {
           $table_rows = intval($table_rows) + 1;
         }
       }*/
@@ -1412,23 +1412,23 @@ function get_php_version() {
 }
 
 function get_user_os() {
-  global $global_info, $HTTP_USER_AGENT, $HTTP_SERVER_VARS;
+  global $global_info;
   if (!empty($global_info['user_os'])) {
     return $global_info['user_os'];
   }
-  if (!empty($HTTP_SERVER_VARS['HTTP_USER_AGENT'])) {
-    $HTTP_USER_AGENT = $HTTP_SERVER_VARS['HTTP_USER_AGENT'];
+  if (!empty($_SERVER['HTTP_USER_AGENT'])) {
+    $_SERVER["HTTP_USER_AGENT"] = $_SERVER['HTTP_USER_AGENT'];
   }
   elseif (getenv("HTTP_USER_AGENT")) {
-    $HTTP_USER_AGENT = getenv("HTTP_USER_AGENT");
+    $_SERVER["HTTP_USER_AGENT"] = getenv("HTTP_USER_AGENT");
   }
-  elseif (empty($HTTP_USER_AGENT)) {
-    $HTTP_USER_AGENT = "";
+  elseif (empty($_SERVER["HTTP_USER_AGENT"])) {
+    $_SERVER["HTTP_USER_AGENT"] = "";
   }
-  if (preg_match("#Win#i", $HTTP_USER_AGENT)) {
+  if (preg_match("#Win#i", $_SERVER["HTTP_USER_AGENT"])) {
     $global_info['user_os'] = "WIN";
   }
-  elseif (preg_match("#Mac#i", $HTTP_USER_AGENT)) {
+  elseif (preg_match("#Mac#i", $_SERVER["HTTP_USER_AGENT"])) {
     $global_info['user_os'] = "MAC";
   }
   else {
@@ -1438,28 +1438,28 @@ function get_user_os() {
 }
 
 function get_browser_info() {
-  global $global_info, $HTTP_USER_AGENT, $HTTP_SERVER_VARS;
+  global $global_info;
   if (!empty($global_info['browser_agent'])) {
     return $global_info['browser_agent'];
   }
-  if (!empty($HTTP_SERVER_VARS['HTTP_USER_AGENT'])) {
-    $HTTP_USER_AGENT = $HTTP_SERVER_VARS['HTTP_USER_AGENT'];
+  if (!empty($_SERVER['HTTP_USER_AGENT'])) {
+    $_SERVER["HTTP_USER_AGENT"] = $_SERVER['HTTP_USER_AGENT'];
   }
   elseif (getenv("HTTP_USER_AGENT")) {
-    $HTTP_USER_AGENT = getenv("HTTP_USER_AGENT");
+    $_SERVER["HTTP_USER_AGENT"] = getenv("HTTP_USER_AGENT");
   }
-  elseif (empty($HTTP_USER_AGENT)) {
-    $HTTP_USER_AGENT = "";
+  elseif (empty($_SERVER["HTTP_USER_AGENT"])) {
+    $_SERVER["HTTP_USER_AGENT"] = "";
   }
-  if (preg_match("#MSIE ([0-9].[0-9]{1,2})#i", $HTTP_USER_AGENT, $regs)) {
+  if (preg_match("#MSIE ([0-9].[0-9]{1,2})#i", $_SERVER["HTTP_USER_AGENT"], $regs)) {
     $global_info['browser_agent'] = "MSIE";
     $global_info['browser_version'] = $regs[1];
   }
-  elseif (preg_match("#Mozilla/([0-9].[0-9]{1,2})#i", $HTTP_USER_AGENT, $regs)) {
+  elseif (preg_match("#Mozilla/([0-9].[0-9]{1,2})#i", $_SERVER["HTTP_USER_AGENT"], $regs)) {
     $global_info['browser_agent'] = "MOZILLA";
     $global_info['browser_version'] = $regs[1];
   }
-  elseif (preg_match("#Opera(/| )([0-9].[0-9]{1,2})#i", $HTTP_USER_AGENT, $regs)) {
+  elseif (preg_match("#Opera(/| )([0-9].[0-9]{1,2})#i", $_SERVER["HTTP_USER_AGENT"], $regs)) {
     $global_info['browser_agent'] = "OPERA";
     $global_info['browser_version'] = $regs[2];
   }
@@ -1471,12 +1471,12 @@ function get_browser_info() {
 }
 
 function get_document_root() {
-  global $global_info, $DOCUMENT_ROOT, $HTTP_SERVER_VARS;
+  global $global_info, $DOCUMENT_ROOT, $_SERVER;
   if (!empty($global_info['document_root'])) {
     return $global_info['document_root'];
   }
-  if (!empty($HTTP_SERVER_VARS['DOCUMENT_ROOT'])) {
-    $DOCUMENT_ROOT = $HTTP_SERVER_VARS['DOCUMENT_ROOT'];
+  if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+    $DOCUMENT_ROOT = $_SERVER['DOCUMENT_ROOT'];
   }
   elseif (getenv("DOCUMENT_ROOT")) {
     $DOCUMENT_ROOT = getenv("DOCUMENT_ROOT");

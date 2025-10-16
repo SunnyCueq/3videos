@@ -37,7 +37,7 @@ function show_template_dir_select($setting_name, $setting_value) {
     }
   }
   sort($folderlist);
-  for($i = 0; $i < sizeof($folderlist); $i++) {
+  for($i = 0; $i < count($folderlist); $i++) {
     echo "<option value=\"".$folderlist[$i]."\"";
     if ($setting_value == $folderlist[$i]) {
       echo " selected=\"selected\"";
@@ -84,7 +84,7 @@ function show_language_dir_select($setting_name, $setting_value) {
     }
   }
   sort($folderlist);
-  for($i = 0; $i < sizeof($folderlist); $i++) {
+  for($i = 0; $i < count($folderlist); $i++) {
     echo "<option value=\"".$folderlist[$i]."\"";
     if ($setting_value == $folderlist[$i]) {
       echo " selected=\"selected\"";
@@ -194,7 +194,7 @@ function show_setting_row($setting_name, $value_option = "", $htmlspecialchars =
 show_admin_header();
 
 if ($action == "updatesettings") {
-  $setting_item = $HTTP_POST_VARS['setting_item'];
+  $setting_item = $_POST['setting_item'];
   foreach ($setting_item as $key => $val) {
     $val = trim($val);
     
@@ -213,8 +213,8 @@ if ($action == "updatesettings") {
     $res = $site_db->query($sql);
   }
 
-  if ($HTTP_POST_VARS['setting_item']['language_dir'] != $config['language_dir']) {
-    include(ROOT_PATH.'lang/'.$HTTP_POST_VARS['setting_item']['language_dir'].'/admin.php');
+  if ($_POST['setting_item']['language_dir'] != $config['language_dir']) {
+    include(ROOT_PATH.'lang/'.$_POST['setting_item']['language_dir'].'/admin.php');
 ?>
     <script language="javascript">
     <!--
@@ -234,8 +234,8 @@ if ($action == "updatesettings") {
 }
 
 if ($action == "modifysettings") {
-  if (isset($HTTP_GET_VARS['settings_msg'])) {
-    printf("<b>%s</b><p>", trim($HTTP_GET_VARS['settings_msg']));
+  if (isset($_GET['settings_msg'])) {
+    printf("<b>%s</b><p>", trim($_GET['settings_msg']));
   }
   elseif (!empty($msg)) {
     echo $msg;
@@ -253,7 +253,7 @@ if ($action == "modifysettings") {
   show_table_header($lang['nav_general_settings'], 2);
   echo "<tr class=\"tablerow\"><td colspan=\"2\">";
   echo "<table border=\"0\" cellpadding=\"3\" cellspacing=\"1\"><tr valign=\"top\">\n";
-  $numgroups = sizeof($setting_group);
+  $numgroups = count($setting_group);
   $percolumn = ceil($numgroups / 2);
   $settingcounter = 0;
   foreach ($setting_group as $key => $val) {

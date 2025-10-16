@@ -263,24 +263,29 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
   $new_words = array();
   $word_insert_sql = "";
   foreach ($clean_words as $key => $val) {
+    if (!is_array($val)) continue;
     foreach ($val as $key2 => $val2) {
       if (!isset($word_done[$key2])) {
         $word_done[$key2] = 1;
         if (isset($word_exists[$key2])) {
           $word_insert_sql .= (($word_insert_sql != "" ) ? ", " : "")."(".$image_id.", ".$word_exists[$key2];
-          foreach ($search_match_fields as $key3 => $val3) {
-            if (isset($match_table_fields[$val3])) {
-              $match = (isset($clean_words[$key3][$key2])) ? 1 : 0;
-              $word_insert_sql .= ", ".$match;
+          if (is_array($search_match_fields)) {
+            foreach ($search_match_fields as $key3 => $val3) {
+              if (isset($match_table_fields[$val3])) {
+                $match = (isset($clean_words[$key3][$key2])) ? 1 : 0;
+                $word_insert_sql .= ", ".$match;
+              }
             }
           }
           $word_insert_sql .= ")";
         }
         else {
           $new_words[$key2] = array();
-          foreach ($search_match_fields as $key3 => $val3) {
-            $match = (isset($clean_words[$key3][$key2])) ? 1 : 0;
-            $new_words[$key2][$val3] = $match;
+          if (is_array($search_match_fields)) {
+            foreach ($search_match_fields as $key3 => $val3) {
+              $match = (isset($clean_words[$key3][$key2])) ? 1 : 0;
+              $new_words[$key2][$val3] = $match;
+            }
           }
         }
       }
@@ -289,8 +294,10 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
 
   if ($word_insert_sql != "") {
     $match_image_fields_sql = "";
-    foreach ($search_match_fields as $field) {
-      $match_image_fields_sql .= ", ".$field;
+    if (is_array($search_match_fields)) {
+      foreach ($search_match_fields as $field) {
+        $match_image_fields_sql .= ", ".$field;
+      }
     }
     $sql = "REPLACE INTO ".WORDMATCH_TABLE."
             (image_id, word_id".$match_image_fields_sql.")
@@ -311,12 +318,15 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
     }
 
     foreach ($new_words as $key => $val) {
+      if (!is_array($val)) continue;
       $match_insert_key_sql = "";
       $match_insert_val_sql = "";
-      foreach ($search_match_fields as $field) {
-        if (isset($match_table_fields[$field])) {
-          $match_insert_key_sql .= ", ".$field;
-          $match_insert_val_sql .= ", ".$val[$field];
+      if (is_array($search_match_fields)) {
+        foreach ($search_match_fields as $field) {
+          if (isset($match_table_fields[$field])) {
+            $match_insert_key_sql .= ", ".$field;
+            $match_insert_val_sql .= ", ".$val[$field];
+          }
         }
       }
       $sql = "INSERT INTO ".WORDMATCH_TABLE." (image_id, word_id".$match_insert_key_sql.")
@@ -379,9 +389,9 @@ function remove_searchwords($image_ids_sql = "") {
 function get_stopwords() {
   global $config, $stopwords;
   if (empty($stopwords)) {
-    $stopword_list = @file(ROOT_PATH."lang/".$config['language_dir']."/search_stopterms.txt");
+    $stopword_list = @file(ROOT_PATH."lang/".$config['language_dir']."/search_stopterms.txt", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $stopwords = array();
-    if (!empty($stopword_list)) {
+    if (!empty($stopword_list) && is_array($stopword_list)) {
       foreach ($stopword_list as $word) {
         $stopwords[] = trim($word);
       }

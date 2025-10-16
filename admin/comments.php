@@ -68,14 +68,14 @@ function delete_comments($comment_ids) {
 show_admin_header();
 
 if ($action == "deletecomment") {
-  $deletecomments = (isset($HTTP_POST_VARS['deletecomments'])) ? $HTTP_POST_VARS['deletecomments'] : array();
+  $deletecomments = (isset($_POST['deletecomments'])) ? $_POST['deletecomments'] : array();
   $comment_ids = "";
   if (!empty($deletecomments)) {
     foreach ($deletecomments as $val) {
       $comment_ids .= (($comment_ids != "") ? ", " : "").$val;
     }
   }
-  $lang_key = (sizeof($deletecomments) > 1) ? 'comments' : 'comment';
+  $lang_key = (count($deletecomments) > 1) ? 'comments' : 'comment';
   show_table_header($lang['delete'].": ".$lang[$lang_key], 1);
   echo "<tr><td class=\"tablerow\">\n";
   echo "<table border=\"0\" cellpadding=\"2\" cellspacing=\"0\"><tr><td>&nbsp;</td><td>\n";
@@ -101,12 +101,12 @@ if ($action == "deletecomment") {
 
 if ($action == "removecomment") {
   $comment_ids = array();
-  if (isset($HTTP_GET_VARS['comment_id']) || isset($HTTP_POST_VARS['comment_id'])) {
-    $comment_id = (isset($HTTP_GET_VARS['comment_id'])) ? intval($HTTP_GET_VARS['comment_id']) : intval($HTTP_POST_VARS['comment_id']);
+  if (isset($_GET['comment_id']) || isset($_POST['comment_id'])) {
+    $comment_id = (isset($_GET['comment_id'])) ? intval($_GET['comment_id']) : intval($_POST['comment_id']);
     $comment_ids[] = $comment_id;
   }
-  elseif (isset($HTTP_POST_VARS['deletecomments'])) {
-    $comment_ids = $HTTP_POST_VARS['deletecomments'];
+  elseif (isset($_POST['deletecomments'])) {
+    $comment_ids = $_POST['deletecomments'];
   }
   else {
    $comment_ids[] = 0;
@@ -116,7 +116,7 @@ if ($action == "removecomment") {
   foreach ($comment_ids as $val) {
     show_hidden_input("deletecomments[]", $val);
   }
-  $lang_key = (sizeof($comment_ids) > 1) ? 'comments' : 'comment';
+  $lang_key = (count($comment_ids) > 1) ? 'comments' : 'comment';
   show_table_header($lang['delete'].": ".$lang[$lang_key], 2);
   show_description_row($lang['delete_comment_confirm']);
   show_form_footer($lang['yes'], "", 2, $lang['no']);
@@ -125,12 +125,12 @@ if ($action == "removecomment") {
 if ($action == "updatecomment") {
   $error = array();
 
-  $comment_id = (isset($HTTP_POST_VARS['comment_id'])) ? intval($HTTP_POST_VARS['comment_id']) : intval($HTTP_GET_VARS['comment_id']);
-  $user_name = trim($HTTP_POST_VARS['user_name']);
-  $comment_headline = trim($HTTP_POST_VARS['comment_headline']);
-  $comment_text = trim($HTTP_POST_VARS['comment_text']);
-  $comment_ip = trim($HTTP_POST_VARS['comment_ip']);
-  $comment_date = trim($HTTP_POST_VARS['comment_date']);
+  $comment_id = (isset($_POST['comment_id'])) ? intval($_POST['comment_id']) : intval($_GET['comment_id']);
+  $user_name = trim($_POST['user_name']);
+  $comment_headline = trim($_POST['comment_headline']);
+  $comment_text = trim($_POST['comment_text']);
+  $comment_ip = trim($_POST['comment_ip']);
+  $comment_date = trim($_POST['comment_date']);
 
   if ($user_name == "") {
     $error['user_name'] = 1;
@@ -166,7 +166,7 @@ if ($action == "editcomment") {
   if ($msg != "") {
     printf("<b>%s</b>\n", $msg);
   }
-  $comment_id = (isset($HTTP_POST_VARS['comment_id'])) ? intval($HTTP_POST_VARS['comment_id']) : intval($HTTP_GET_VARS['comment_id']);
+  $comment_id = (isset($_POST['comment_id'])) ? intval($_POST['comment_id']) : intval($_GET['comment_id']);
 
   $sql = "SELECT *, FROM_UNIXTIME(comment_date) AS comment_date
           FROM ".COMMENTS_TABLE."
@@ -220,53 +220,53 @@ if ($action == "findcomments") {
 
   $condition = "1=1";
 
-  $image_name = trim($HTTP_POST_VARS['image_name']);
+  $image_name = trim($_POST['image_name']);
   if ($image_name != "") {
     $condition .= " AND INSTR(LCASE(i.image_name),'".strtolower($image_name)."')>0";
   }
-  $image_id = intval($HTTP_POST_VARS['image_id']);
+  $image_id = intval($_POST['image_id']);
   if ($image_id != 0) {
     $condition .= " AND INSTR(LCASE(c.image_id),'".strtolower($image_id)."')>0";
   }
-  $user_name = trim($HTTP_POST_VARS['user_name']);
+  $user_name = trim($_POST['user_name']);
   if ($user_name != "") {
     $condition .= " AND INSTR(LCASE(c.user_name),'".strtolower($user_name)."')>0";
   }
-  $comment_headline = trim($HTTP_POST_VARS['comment_headline']);
+  $comment_headline = trim($_POST['comment_headline']);
   if ($comment_headline != "") {
     $condition .= " AND INSTR(LCASE(c.comment_headline),'".strtolower($comment_headline)."')>0";
   }
-  $comment_text = trim($HTTP_POST_VARS['comment_text']);
+  $comment_text = trim($_POST['comment_text']);
   if ($comment_text != "") {
     $condition .= " AND INSTR(LCASE(c.comment_text),'".strtolower($comment_text)."')>0";
   }
-  $dateafter = trim($HTTP_POST_VARS['dateafter']);
+  $dateafter = trim($_POST['dateafter']);
   if ($dateafter != "") {
     $condition .= " AND c.comment_date > UNIX_TIMESTAMP('$dateafter')";
   }
-  $datebefore = trim($HTTP_POST_VARS['datebefore']);
+  $datebefore = trim($_POST['datebefore']);
   if ($datebefore != "") {
     $condition .= " AND c.comment_date < UNIX_TIMESTAMP('$datebefore')";
   }
-  $orderby = trim($HTTP_POST_VARS['orderby']);
+  $orderby = trim($_POST['orderby']);
   if (!isset($orderbyOptions[$orderby])) {
     $orderby = "i.image_name";
   }
-  $limitstart = (isset($HTTP_POST_VARS['limitstart'])) ? trim($HTTP_POST_VARS['limitstart']) : "";
+  $limitstart = (isset($_POST['limitstart'])) ? trim($_POST['limitstart']) : "";
   if ($limitstart == "") {
     $limitstart = 0;
   }
   else {
     $limitstart--;
   }
-  $limitnumber = trim($HTTP_POST_VARS['limitnumber']);
+  $limitnumber = trim($_POST['limitnumber']);
   if ($limitnumber == "") {
     $limitnumber = 5000;
   }
 
   $direction = "ASC";
-  if (isset($HTTP_GET_VARS['direction']) || isset($HTTP_POST_VARS['direction'])) {
-    $requestedDirection = (isset($HTTP_GET_VARS['direction'])) ? trim($HTTP_GET_VARS['direction']) : trim($HTTP_POST_VARS['direction']);
+  if (isset($_GET['direction']) || isset($_POST['direction'])) {
+    $requestedDirection = (isset($_GET['direction'])) ? trim($_GET['direction']) : trim($_POST['direction']);
 
     if ('DESC' === $requestedDirection) {
       $direction = "DESC";

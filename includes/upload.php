@@ -172,14 +172,14 @@ class Upload {
   }
 
   function upload_file($field_name, $image_type, $cat_id = 0, $file_name = "") {
-    global $HTTP_COOKIE_VARS, $HTTP_POST_VARS, $HTTP_GET_VARS, $HTTP_POST_FILES;
+    global $_COOKIE, $_POST, $_GET, $_FILES;
 
     // Bugfix for: http://www.securityfocus.com/archive/1/80106
-    if (isset($HTTP_COOKIE_VARS[$field_name]) || isset($HTTP_POST_VARS  [$field_name]) || isset($HTTP_GET_VARS   [$field_name])) {
+    if (isset($_COOKIE[$field_name]) || isset($_POST  [$field_name]) || isset($_GET   [$field_name])) {
       die("Security violation");
     }
 
-    $this->HTTP_POST_FILES = $HTTP_POST_FILES;
+    $this->HTTP_POST_FILES = $_FILES;
     $this->image_type = $image_type;
     $this->field_name = $field_name;
 

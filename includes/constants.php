@@ -25,6 +25,9 @@ if (!defined('ROOT_PATH')) {
 
 // If 4images has problems to find out the right URL, define it here.
 // define('SCRIPT_URL', 'http://www.yourdomain.com/4images'); //no trailing slash
+if (!defined('SCRIPT_URL')) {
+    define('SCRIPT_URL', '');
+}
 
 // Table names
 define('CATEGORIES_TABLE', $table_prefix.'categories');
@@ -141,7 +144,18 @@ define('TEMPLATE_DIR', 'templates');
 define('SCRIPT_VERSION', '1.10');
 
 
+// Session key for security
+if (!defined('SESSION_KEY')) {
+    define('SESSION_KEY', '');
+}
+
 // Debug contants
-// define("PRINT_STATS", 1);
-// define("PRINT_QUERIES", 1);
-// define('PRINT_CACHE_MESSAGES', 1);
+if (!defined('PRINT_STATS')) {
+    define('PRINT_STATS', 0);
+}
+if (!defined('PRINT_QUERIES')) {
+    define('PRINT_QUERIES', 0);
+}
+if (!defined('PRINT_CACHE_MESSAGES')) {
+    define('PRINT_CACHE_MESSAGES', 0);
+}

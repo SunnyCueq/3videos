@@ -74,7 +74,7 @@ class Template
     {
         if (!isset($this->template_cache[$template])) {
             $path = $this->template_path."/".$template.".".$this->template_extension;
-            $line = @implode("", @file($path));
+            $line = @file_get_contents($path);
             if (empty($line)) {
                 $this->error("Couldn't open Template ".$path, 1);
             }
@@ -129,13 +129,13 @@ class Template
             // Fix single quotes
             $parsed = preg_replace_callback(
                 "/=\s*'(.*)".preg_quote($this->start)."([A-Z0-9_]+)".preg_quote($this->end)."(.*)';/Usi",
-                array(&$this, '_fix_php_quotes'),
+                [$this, '_fix_php_quotes'],
                 $regs[$i][0]
             );
 
             $parsed = preg_replace_callback(
                 '='.preg_quote($this->start).'([A-Z0-9_]+)'.preg_quote($this->end).'=Usi',
-                array(&$this, '_compile_php_var'),
+                [$this, '_compile_php_var'],
                 $parsed
             );
 
@@ -145,20 +145,20 @@ class Template
         // Compile variables
         $template = preg_replace_callback(
             '='.preg_quote($this->start).'([A-Z0-9_]+)'.preg_quote($this->end).'=Usi',
-            array(&$this, '_compile_var'),
+            [$this, '_compile_var'],
             $template
         );
 
         // Compile condition tags
         $template = preg_replace_callback(
             '='.preg_quote($this->start).'if(not?)?\s+([A-Z0-9_]+)'.preg_quote($this->end).'=Usi',
-            array(&$this, '_compile_condition_start'),
+            [$this, '_compile_condition_start'],
             $template
         );
 
         $template = preg_replace_callback(
             '='.preg_quote($this->start).'endif(not?)?\s+([A-Z0-9_]+)'.preg_quote($this->end).'=Usi',
-            array(&$this, '_compile_condition_end'),
+            [$this, '_compile_condition_end'],
             $template
         );
 
@@ -229,7 +229,7 @@ class Template
             } else {
                 if (!isset($keys) || count($keys) != count($this->val_cache)) {
                     $keys = array_keys($this->val_cache);
-                    array_walk($keys, array(&$this, '_prepare_key'));
+                    array_walk($keys, [$this, '_prepare_key']);
                 }
 
                 $array[$key] = str_replace($keys, $this->val_cache, $val);

@@ -53,7 +53,7 @@ function check_permission($type, $cat_id = 0) {
   }
   elseif ($cat_cache[$cat_id][$type] == AUTH_ACL && ($user_info['user_level'] != GUEST && $user_info['user_level'] != USER_AWAITING)) {
     if (isset($user_access[$cat_id])) {
-      for ($i = 0; $i < sizeof($user_access[$cat_id]); $i++) {
+      for ($i = 0; $i < count($user_access[$cat_id]); $i++) {
         if (isset($user_access[$cat_id][$i][$type]) &&  $user_access[$cat_id][$i][$type] == 1) {
           return true;
         }

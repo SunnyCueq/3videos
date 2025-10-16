@@ -21,9 +21,7 @@
  *************************************************************************/
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-if (function_exists("set_magic_quotes_runtime")) {
-    @set_magic_quotes_runtime(0);
-}
+// magic_quotes_runtime was removed in PHP 7.0
 
 if (!function_exists("date_default_timezone_set")) {
     function date_default_timezone_set($timezone)
@@ -94,18 +92,18 @@ function get_timezone_by_offset($offset)
     return $timezones['1'];
 }
 
-if (!isset($HTTP_GET_VARS)) {
-    $HTTP_GET_VARS    = &$_GET;
-    $HTTP_POST_VARS   = &$_POST;
-    $HTTP_COOKIE_VARS = &$_COOKIE;
-    $HTTP_POST_FILES  = &$_FILES;
-    $HTTP_SERVER_VARS = &$_SERVER;
-    $HTTP_ENV_VARS    = &$_ENV;
+if (!isset($_GET)) {
+    $_GET    = &$_GET;
+    $_POST   = &$_POST;
+    $_COOKIE = &$_COOKIE;
+    $_FILES  = &$_FILES;
+    $_SERVER = &$_SERVER;
+    $_ENV    = &$_ENV;
 }
 
-$HTTP_GET_VARS = addslashes_array($HTTP_GET_VARS);
-$HTTP_POST_VARS = addslashes_array($HTTP_POST_VARS);
-$HTTP_COOKIE_VARS = addslashes_array($HTTP_COOKIE_VARS);
+$_GET = addslashes_array($_GET);
+$_POST = addslashes_array($_POST);
+$_COOKIE = addslashes_array($_COOKIE);
 
 if (@file_exists(ROOT_PATH."config.php")) {
     @include(ROOT_PATH.'config.php');
@@ -117,8 +115,8 @@ if (defined("4IMAGES_ACTIVE")) {
     exit;
 }
 
-if (isset($HTTP_GET_VARS['action']) || isset($HTTP_POST_VARS['action'])) {
-    $action = (isset($HTTP_GET_VARS['action'])) ? stripslashes(trim($HTTP_GET_VARS['action'])) : stripslashes(trim($HTTP_POST_VARS['action']));
+if (isset($_GET['action']) || isset($_POST['action'])) {
+    $action = (isset($_GET['action'])) ? stripslashes(trim($_GET['action'])) : stripslashes(trim($_POST['action']));
 } else {
     $action = "";
 }
@@ -136,13 +134,13 @@ while ($folder = @readdir($handle)) {
     }
 }
 sort($folderlist);
-for ($i = 0; $i < sizeof($folderlist); $i++) {
+for ($i = 0; $i < count($folderlist); $i++) {
     $lang_select .= " <b><a href=\"install.php?install_lang=".$folderlist[$i]."\">".$folderlist[$i]."</a></b> \n";
 }
 closedir($handle);
 
-if (isset($HTTP_GET_VARS['install_lang']) || isset($HTTP_POST_VARS['install_lang'])) {
-    $install_lang = (isset($HTTP_GET_VARS['install_lang'])) ? trim($HTTP_GET_VARS['install_lang']) : trim($HTTP_POST_VARS['install_lang']);
+if (isset($_GET['install_lang']) || isset($_POST['install_lang'])) {
+    $install_lang = (isset($_GET['install_lang'])) ? trim($_GET['install_lang']) : trim($_POST['install_lang']);
 }
 
 if (empty($install_lang) || !in_array($install_lang, $folderlist)) {
@@ -152,17 +150,17 @@ if (empty($install_lang) || !in_array($install_lang, $folderlist)) {
 $lang = array();
 include(ROOT_PATH.'lang/'.$install_lang.'/install.php');
 
-$db_servertype   = (isset($HTTP_POST_VARS['db_servertype'])) ? trim($HTTP_POST_VARS['db_servertype']) : "mysqli";
-$db_host         = (isset($HTTP_POST_VARS['db_host'])) ? trim($HTTP_POST_VARS['db_host']) : "";
-$db_name         = (isset($HTTP_POST_VARS['db_name'])) ? trim($HTTP_POST_VARS['db_name']) : "";
-$db_user         = (isset($HTTP_POST_VARS['db_user'])) ? trim($HTTP_POST_VARS['db_user']) : "";
-$db_password     = (isset($HTTP_POST_VARS['db_password'])) ? trim($HTTP_POST_VARS['db_password']) : "";
-$table_prefix    = (isset($HTTP_POST_VARS['table_prefix'])) ? trim($HTTP_POST_VARS['table_prefix']) : "4images_";
+$db_servertype   = (isset($_POST['db_servertype'])) ? trim($_POST['db_servertype']) : "mysqli";
+$db_host         = (isset($_POST['db_host'])) ? trim($_POST['db_host']) : "";
+$db_name         = (isset($_POST['db_name'])) ? trim($_POST['db_name']) : "";
+$db_user         = (isset($_POST['db_user'])) ? trim($_POST['db_user']) : "";
+$db_password     = (isset($_POST['db_password'])) ? trim($_POST['db_password']) : "";
+$table_prefix    = (isset($_POST['table_prefix'])) ? trim($_POST['table_prefix']) : "4images_";
 
-$admin_user      = (isset($HTTP_POST_VARS['admin_user'])) ? trim($HTTP_POST_VARS['admin_user']) : "";
-$admin_password  = (isset($HTTP_POST_VARS['admin_password'])) ? trim($HTTP_POST_VARS['admin_password']) : "";
-$admin_password2 = (isset($HTTP_POST_VARS['admin_password2'])) ? trim($HTTP_POST_VARS['admin_password2']) : "";
-$selected_timezone = (isset($HTTP_POST_VARS['timezone_select'])) ? trim($HTTP_POST_VARS['timezone_select']) : '1';
+$admin_user      = (isset($_POST['admin_user'])) ? trim($_POST['admin_user']) : "";
+$admin_password  = (isset($_POST['admin_password'])) ? trim($_POST['admin_password']) : "";
+$admin_password2 = (isset($_POST['admin_password2'])) ? trim($_POST['admin_password2']) : "";
+$selected_timezone = (isset($_POST['timezone_select'])) ? trim($_POST['timezone_select']) : '1';
 $selected_timezone = get_timezone_by_offset($selected_timezone);
 
 include(ROOT_PATH.'includes/constants.php');
@@ -170,7 +168,7 @@ include(ROOT_PATH.'includes/constants.php');
 if ($action == "downloadconfig") {
     header("Content-Type: text/x-delimtext; name=\"config.php\"");
     header("Content-disposition: attachment; filename=config.php");
-    $config_file = stripslashes(trim($HTTP_POST_VARS['config_file']));
+    $config_file = stripslashes(trim($_POST['config_file']));
     echo $config_file;
     exit;
 }
@@ -246,7 +244,7 @@ if ($action == "startinstall") {
         if (empty($error_log)) {
             $cont = preg_replace('/4images_/', $table_prefix, $cont);
             $pieces = split_sql_dump($cont);
-            for ($i = 0; $i < sizeof($pieces); $i++) {
+            for ($i = 0; $i < count($pieces); $i++) {
                 $sql = trim($pieces[$i]);
                 if (!empty($sql) and $sql[0] != "#") {
                     if (!$site_db->query($sql)) {

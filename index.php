@@ -31,8 +31,8 @@ include(ROOT_PATH.'global.php');
 require(ROOT_PATH.'includes/sessions.php');
 $user_access = get_permission();
 
-if (isset($HTTP_GET_VARS['template']) || isset($HTTP_POST_VARS['template'])) {
-  $template = (isset($HTTP_GET_VARS['template'])) ? get_basefile(stripslashes($HTTP_GET_VARS['template'])) : get_basefile(stripslashes($HTTP_POST_VARS['template']));
+if (isset($_GET['template']) || isset($_POST['template'])) {
+  $template = (isset($_GET['template'])) ? get_basefile(stripslashes($_GET['template'])) : get_basefile(stripslashes($_POST['template']));
   if (!file_exists(TEMPLATE_PATH."/".$template.".".$site_template->template_extension)) {
     $template = "";
   }

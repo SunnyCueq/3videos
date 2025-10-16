@@ -33,16 +33,16 @@ include(ROOT_PATH.'includes/search_utils.php');
 $org_search_keywords = $search_keywords;
 $org_search_user = $search_user;
 
-if (isset($HTTP_GET_VARS['search_terms']) || isset($HTTP_POST_VARS['search_terms'])) {
-  $search_terms = isset($HTTP_POST_VARS['search_terms']) ? $HTTP_POST_VARS['search_terms'] : $HTTP_GET_VARS['search_terms'];
+if (isset($_GET['search_terms']) || isset($_POST['search_terms'])) {
+  $search_terms = isset($_POST['search_terms']) ? $_POST['search_terms'] : $_GET['search_terms'];
   $search_terms = $search_terms == "all" ? 1 : 0;
 }
 else {
   $search_terms = 0;
 }
 
-if (isset($HTTP_GET_VARS['search_fields']) || isset($HTTP_POST_VARS['search_fields'])) {
-  $search_fields = isset($HTTP_POST_VARS['search_fields']) ? trim($HTTP_POST_VARS['search_fields']) : trim($HTTP_GET_VARS['search_fields']);
+if (isset($_GET['search_fields']) || isset($_POST['search_fields'])) {
+  $search_fields = isset($_POST['search_fields']) ? trim($_POST['search_fields']) : trim($_GET['search_fields']);
 }
 else {
   $search_fields = "all";
@@ -72,7 +72,7 @@ if ($search_keywords != "" && $show_result == 1) {
 
   $match_field_sql = ($search_fields != "all" && isset($search_match_fields[$search_fields])) ? "AND m.".$search_match_fields[$search_fields]." = 1" : "";
   $search_word_cache = array();
-  for ($i = 0; $i < sizeof($split_words); $i++) {
+  for ($i = 0; $i < count($split_words); $i++) {
     if ($split_words[$i] == "and" || $split_words[$i] == "und" || $split_words[$i] == "or" || $split_words[$i] == "oder" || $split_words[$i] == "not") {
       $search_word_cache[$i] = ($search_terms) ? "and" : $split_words[$i];
     }
@@ -104,7 +104,7 @@ if ($search_keywords != "" && $show_result == 1) {
   $is_first_word = 1;
   $operator = "or";
   $image_id_list = array();
-  for ($i = 0; $i < sizeof($search_word_cache); $i++) {
+  for ($i = 0; $i < count($search_word_cache); $i++) {
     if ($search_word_cache[$i] == "and" || $search_word_cache[$i] == "und" || $search_word_cache[$i] == "or" || $search_word_cache[$i] == "oder" || $search_word_cache[$i] == "not") {
       if (!$is_first_word) {
         $operator = $search_word_cache[$i];

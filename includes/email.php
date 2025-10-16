@@ -28,6 +28,7 @@ class Email {
   var $auth_type = "LOGIN"; // Default: "LOGIN". Set to "PLAIN" if required.
   var $no_error = 0;
   var $use_smtp;
+  var $smtp_auth;
   var $to;
   var $subject;
   var $body;
@@ -86,7 +87,7 @@ class Email {
 
   function get_template($template, $lang) {
     $path = ROOT_PATH."lang/".$lang."/email/".$template.".".$this->template_extension;
-    $line = @implode("", @file($path));
+    $line = @file_get_contents($path);
     if (empty($line)) {
       $this->error("Couldn't open Template ".$path);
     }
@@ -98,7 +99,7 @@ class Email {
     if ($this->word_wrap) {
       $lines = explode("\n", $message);
       $message = "";
-      for ($i = 0 ;$i < sizeof($lines); $i++) {
+      for ($i = 0 ;$i < count($lines); $i++) {
         $line_part = explode(" ", trim($lines[$i]));
         $buf = "";
         for ($j = 0; $j < count($line_part); $j++)  {

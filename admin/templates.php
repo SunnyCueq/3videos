@@ -28,16 +28,16 @@ if ($action == "") {
   $action = "modifytemplates";
 }
 
-if (isset($HTTP_GET_VARS['template_folder']) || isset($HTTP_POST_VARS['template_folder'])) {
-  $template_folder = (isset($HTTP_GET_VARS['template_folder'])) ? trim($HTTP_GET_VARS['template_folder']) : trim($HTTP_POST_VARS['template_folder']);
+if (isset($_GET['template_folder']) || isset($_POST['template_folder'])) {
+  $template_folder = (isset($_GET['template_folder'])) ? trim($_GET['template_folder']) : trim($_POST['template_folder']);
   $template_folder = str_replace('.', '', $template_folder);
 }
 else {
   $template_folder = "";
 }
 
-if (isset($HTTP_GET_VARS['template_file_name']) || isset($HTTP_POST_VARS['template_file_name'])) {
-  $template_file_name = (isset($HTTP_GET_VARS['template_file_name'])) ? trim($HTTP_GET_VARS['template_file_name']) : trim($HTTP_POST_VARS['template_file_name']);
+if (isset($_GET['template_file_name']) || isset($_POST['template_file_name'])) {
+  $template_file_name = (isset($_GET['template_file_name'])) ? trim($_GET['template_file_name']) : trim($_POST['template_file_name']);
   $template_file_name = (strpos($template_file_name, 'media/') !== false ? 'media/' : '') . basename($template_file_name);
 }
 else {
@@ -75,7 +75,7 @@ function show_template_select_row($title, $template_folder = "") {
     echo "<input type=\"hidden\" name=\"action\" value=\"loadtemplate\">\n";
     echo "<input type=\"hidden\" name=\"template_folder\" value=\"$template_folder\">\n";
     echo "<select name=template_file_name>\n";
-    for($i = 0; $i < sizeof($file_list); $i++) {
+    for($i = 0; $i < count($file_list); $i++) {
       echo "<option value=\"".$file_list[$i]."\"";
       if ($template_file_name == $file_list[$i]) {
         echo " selected=\"selected\"";
@@ -107,7 +107,7 @@ function show_theme_select_row($title) {
     sort($folder_list);
     echo "<table border=\"0\">\n<tr><form method=\"post\" action=\"./templates.php\">\n<td>\n";
     echo "<select name=\"template_folder\">\n";
-    for($i = 0; $i < sizeof($folder_list); $i++) {
+    for($i = 0; $i < count($folder_list); $i++) {
       echo "<option value=\"".$folder_list[$i]."\"";
       if ($template_folder == $folder_list[$i]) {
         echo " selected=\"selected\"";
@@ -128,8 +128,8 @@ if ($action == "loadtemplate") {
 }
 
 if ($action == "savetemplate") {
-  if (isset($HTTP_POST_VARS['content'])) {
-    $content = trim($HTTP_POST_VARS['content']);
+  if (isset($_POST['content'])) {
+    $content = trim($_POST['content']);
   }
   else {
     $content = "";

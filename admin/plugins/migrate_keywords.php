@@ -77,7 +77,7 @@ if ($msg != "") {
     printf("<b>%s</b><br /><br />\n", $msg);
 }
 
-show_form_header($HTTP_SERVER_VARS['PHP_SELF'], "migratekeywords");
+show_form_header($_SERVER['PHP_SELF'], "migratekeywords");
 show_table_header($lang_migration_title);
 show_description_row($lang_migration_perform);
 show_form_footer($lang['submit'], "");

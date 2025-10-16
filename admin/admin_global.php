@@ -32,15 +32,15 @@ if ($csrf_protection_enable && $csrf_protection_backend) {
     csrf_start();
 }
 
-if (isset($HTTP_GET_VARS['redirect']) || isset($HTTP_POST_VARS['redirect'])) {
-    $redirect = (isset($HTTP_GET_VARS['redirect'])) ? trim($HTTP_GET_VARS['redirect']) : trim($HTTP_POST_VARS['redirect']);
+if (isset($_GET['redirect']) || isset($_POST['redirect'])) {
+    $redirect = (isset($_GET['redirect'])) ? trim($_GET['redirect']) : trim($_POST['redirect']);
     $redirect = htmlspecialchars($redirect);
 } else {
     $redirect = "";
 }
 
-if (isset($HTTP_GET_VARS['goto']) || isset($HTTP_POST_VARS['goto'])) {
-    $goto = (isset($HTTP_GET_VARS['goto'])) ? trim($HTTP_GET_VARS['goto']) : trim($HTTP_POST_VARS['goto']);
+if (isset($_GET['goto']) || isset($_POST['goto'])) {
+    $goto = (isset($_GET['goto'])) ? trim($_GET['goto']) : trim($_POST['goto']);
 } else {
     $goto = "";
 }
@@ -89,41 +89,41 @@ if (strstr(getenv("HTTP_USER_AGENT"), "MSIE")) { // Browser Detection
     $textarea_size = "28";
 }
 
-if (isset($HTTP_GET_VARS['logout'])) {
+if (isset($_GET['logout'])) {
     $site_sess->logout($user_info['user_id']);
     setcookie("adminon", 0, 0, '/');
     redirect("index.php");
 }
 
-if (isset($HTTP_POST_VARS['loginusername']) && isset($HTTP_POST_VARS['loginpassword'])) {
-    $loginusername = trim($HTTP_POST_VARS['loginusername']);
-    $loginpassword = trim($HTTP_POST_VARS['loginpassword']);
+if (isset($_POST['loginusername']) && isset($_POST['loginpassword'])) {
+    $loginusername = trim($_POST['loginusername']);
+    $loginpassword = trim($_POST['loginpassword']);
     if ($site_sess->login($loginusername, $loginpassword, 0, 0)) {
         $user_info = $site_sess->return_user_info();
     }
 }
 
 if (defined('ADMIN_SAFE_LOGIN') && ADMIN_SAFE_LOGIN == 1) {
-    if ($user_info['user_level'] != GUEST && $user_info['user_level'] == ADMIN && isset($HTTP_POST_VARS['loginusername'])) {
+    if ($user_info['user_level'] != GUEST && $user_info['user_level'] == ADMIN && isset($_POST['loginusername'])) {
         setcookie("adminon", 1, 0, '/');
-        $HTTP_COOKIE_VARS['adminon'] = 1;
+        $_COOKIE['adminon'] = 1;
     } else {
         if ($user_info['user_level'] == GUEST || $user_info['user_level'] == USER || $user_info['user_level'] == USER_AWAITING) {
-            $HTTP_COOKIE_VARS['adminon'] = 0;
+            $_COOKIE['adminon'] = 0;
         }
     }
 
-    if (!isset($HTTP_COOKIE_VARS['adminon']) || $HTTP_COOKIE_VARS['adminon'] == 0) {
+    if (!isset($_COOKIE['adminon']) || $_COOKIE['adminon'] == 0) {
         $user_info['user_level'] = GUEST;
     } else {
-        if ($user_info['user_level'] != GUEST  && $user_info['user_level'] == ADMIN && isset($HTTP_POST_VARS['loginusername'])) {
+        if ($user_info['user_level'] != GUEST  && $user_info['user_level'] == ADMIN && isset($_POST['loginusername'])) {
             setcookie("adminon", 1, 0, '/');
-            $HTTP_COOKIE_VARS['adminon'] = 1;
+            $_COOKIE['adminon'] = 1;
         }
     }
 }
 
-if (isset($HTTP_POST_VARS['goback']) || isset($HTTP_GET_VARS['goback'])) {
+if (isset($_POST['goback']) || isset($_GET['goback'])) {
     $back_url = $site_sess->get_session_var('back_url');
 
     if (empty($back_url)) {

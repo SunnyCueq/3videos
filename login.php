@@ -28,7 +28,7 @@ include(ROOT_PATH.'global.php');
 require(ROOT_PATH.'includes/sessions.php');
 
 $error = 0;
-if ($user_info['user_level'] != GUEST || empty($HTTP_POST_VARS['user_name']) || empty($HTTP_POST_VARS['user_password'])) {
+if ($user_info['user_level'] != GUEST || empty($_POST['user_name']) || empty($_POST['user_password'])) {
   if (!preg_match("/index\.php/", $url) && !preg_match("/login\.php/", $url) && !preg_match("/register\.php/", $url) && !preg_match("/member\.php/", $url)) {
     redirect($url);
   }
@@ -37,9 +37,9 @@ if ($user_info['user_level'] != GUEST || empty($HTTP_POST_VARS['user_name']) || 
   }
 }
 else {
-  $user_name = trim($HTTP_POST_VARS['user_name']);
-  $user_password = trim($HTTP_POST_VARS['user_password']);
-  $auto_login = (isset($HTTP_POST_VARS['auto_login']) && $HTTP_POST_VARS['auto_login'] == 1) ? 1 : 0;
+  $user_name = trim($_POST['user_name']);
+  $user_password = trim($_POST['user_password']);
+  $auto_login = (isset($_POST['auto_login']) && $_POST['auto_login'] == 1) ? 1 : 0;
 
   if ($site_sess->login($user_name, $user_password, $auto_login)) {
     if (!preg_match("/index\.php/", $url) && !preg_match("/login\.php/", $url) && !preg_match("/register\.php/", $url) && !preg_match("/member\.php/", $url)) {

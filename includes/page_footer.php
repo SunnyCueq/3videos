@@ -42,10 +42,10 @@ $site_db->close();
 $site_sess->freeze();
 
 if ($do_gzip_compress) {
-  if (preg_match("/gzip/i", $HTTP_SERVER_VARS["HTTP_ACCEPT_ENCODING"])) {
+  if (preg_match("/gzip/i", $_SERVER["HTTP_ACCEPT_ENCODING"])) {
     $encoding = "gzip";
   }
-  elseif (preg_match("/x-gzip/i", $HTTP_SERVER_VARS["HTTP_ACCEPT_ENCODING"])) {
+  elseif (preg_match("/x-gzip/i", $_SERVER["HTTP_ACCEPT_ENCODING"])) {
     $encoding = "x-gzip";
   }
 

@@ -156,7 +156,7 @@ if ($action == "nav") {
             if (get_file_extension($file) != "php") {
                 continue;
             }
-            $plugin_file = file("./plugins/".$file);
+            $plugin_file = file("./plugins/".$file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             $plugin_file[0] = trim($plugin_file[0]);
             if (preg_match("/PLUGIN_TITLE:(.+)/", $plugin_file[0], $regs)) {
                 show_nav_option(trim($regs[1]), "./plugins/".$file);

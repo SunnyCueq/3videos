@@ -121,7 +121,7 @@ class Zipfile {
 
   function prepare() {
     // empty file!?
-    if (!sizeof($this->ctrl_dirs))
+    if (!count($this->ctrl_dirs))
     {
         die("Zipfile is empty!");
     }
@@ -131,7 +131,7 @@ class Zipfile {
 
     // building the TOC
     $ctrlDir = '';
-    for ($t = 0; $t < sizeof($this->ctrl_dirs); $t++)
+    for ($t = 0; $t < count($this->ctrl_dirs); $t++)
     {
         $dir = $this->ctrl_dirs[$t];
 
@@ -169,10 +169,10 @@ class Zipfile {
     fwrite($this->tmpfp, "\x50\x4b\x05\x06\x00\x00\x00\x00");
 
     // put out "files on disk" and "files whole"
-    //echo pack('v', sizeof($this->ctrl_dirs));
-    //echo pack('v', sizeof($this->ctrl_dirs));
-    fwrite($this->tmpfp, pack('v', sizeof($this->ctrl_dirs)));
-    fwrite($this->tmpfp, pack('v', sizeof($this->ctrl_dirs)));
+    //echo pack('v', count($this->ctrl_dirs));
+    //echo pack('v', count($this->ctrl_dirs));
+    fwrite($this->tmpfp, pack('v', count($this->ctrl_dirs)));
+    fwrite($this->tmpfp, pack('v', count($this->ctrl_dirs)));
 
     // put out length of TOC
     //echo pack('V', $ctrlDirLen);

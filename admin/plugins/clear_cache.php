@@ -48,7 +48,7 @@ if ($msg != "") {
     printf("<b>%s</b>\n", $msg);
 }
 
-show_form_header($HTTP_SERVER_VARS['PHP_SELF'], "clearcache");
+show_form_header($_SERVER['PHP_SELF'], "clearcache");
 show_table_header($lang_clear_cache);
 show_description_row(sprintf($lang_clear_confirm, realpath($cache_path)));
 show_form_footer($lang['submit'], "");

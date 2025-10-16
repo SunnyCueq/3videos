@@ -30,9 +30,7 @@ $start_time = microtime();
 // ini_set('display_errors', true);
 // ini_set('display_startup_errors', true);
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-if (function_exists("set_magic_quotes_runtime")) {
-    @set_magic_quotes_runtime(0);
-}
+// magic_quotes_runtime was removed in PHP 7.0
 
 if (!function_exists("date_default_timezone_set")) {
     function date_default_timezone_set($timezone)
@@ -49,23 +47,19 @@ function addslashes_array($array)
     return $array;
 }
 
-if (!isset($HTTP_GET_VARS)) {
-    $HTTP_GET_VARS    = &$_GET;
-    $HTTP_POST_VARS   = &$_POST;
-    $HTTP_COOKIE_VARS = &$_COOKIE;
-    $HTTP_POST_FILES  = &$_FILES;
-    $HTTP_SERVER_VARS = &$_SERVER;
-    $HTTP_ENV_VARS    = &$_ENV;
-}
+// Legacy variables for compatibility
+$_COOKIE = $_COOKIE;
+$_FILES  = $_FILES;
+$_ENV    = $_ENV;
 
-if (isset($HTTP_GET_VARS['GLOBALS']) || isset($HTTP_POST_VARS['GLOBALS']) || isset($HTTP_COOKIE_VARS['GLOBALS']) || isset($HTTP_POST_FILES['GLOBALS'])) {
+if (isset($_GET['GLOBALS']) || isset($_POST['GLOBALS']) || isset($_COOKIE['GLOBALS']) || isset($_FILES['GLOBALS'])) {
     // Try to exploit PHP bug
     die("Security violation");
 }
 
-$HTTP_GET_VARS    = addslashes_array($HTTP_GET_VARS);
-$HTTP_POST_VARS   = addslashes_array($HTTP_POST_VARS);
-$HTTP_COOKIE_VARS = addslashes_array($HTTP_COOKIE_VARS);
+$_GET    = addslashes_array($_GET);
+$_POST   = addslashes_array($_POST);
+$_COOKIE = addslashes_array($_COOKIE);
 
 $search_match_fields = null;
 $search_index_types = null;
@@ -228,49 +222,49 @@ function clean_array($array)
 }
 
 if (!defined('IN_CP')) {
-    $HTTP_GET_VARS    = clean_array($HTTP_GET_VARS);
-    $HTTP_POST_VARS   = clean_array($HTTP_POST_VARS);
-    $HTTP_COOKIE_VARS = clean_array($HTTP_COOKIE_VARS);
-    $HTTP_POST_FILES  = clean_array($HTTP_POST_FILES);
+    $_GET    = clean_array($_GET);
+    $_POST   = clean_array($_POST);
+    $_COOKIE = clean_array($_COOKIE);
+    $_FILES  = clean_array($_FILES);
 }
 
 //-----------------------------------------------------
 //--- Useful Stuff ------------------------------------
 //-----------------------------------------------------
-if (isset($HTTP_GET_VARS['action']) || isset($HTTP_POST_VARS['action'])) {
-    $action = (isset($HTTP_POST_VARS['action'])) ? stripslashes(trim((string)$HTTP_POST_VARS['action'])) : stripslashes(trim((string)$HTTP_GET_VARS['action']));
+if (isset($_GET['action']) || isset($_POST['action'])) {
+    $action = (isset($_POST['action'])) ? stripslashes(trim((string)$_POST['action'])) : stripslashes(trim((string)$_GET['action']));
     $action = preg_replace("/[^a-z0-9_-]+/i", "", $action);
 } else {
     $action = "";
 }
 
-if (isset($HTTP_GET_VARS['mode']) || isset($HTTP_POST_VARS['mode'])) {
-    $mode = (isset($HTTP_POST_VARS['mode'])) ? stripslashes(trim((string)$HTTP_POST_VARS['mode'])) : stripslashes(trim((string)$HTTP_GET_VARS['mode']));
+if (isset($_GET['mode']) || isset($_POST['mode'])) {
+    $mode = (isset($_POST['mode'])) ? stripslashes(trim((string)$_POST['mode'])) : stripslashes(trim((string)$_GET['mode']));
     $mode = preg_replace("/[^a-z0-9_-]+/i", "", $mode);
 } else {
     $mode = "";
 }
 
-if (isset($HTTP_GET_VARS[URL_CAT_ID]) || isset($HTTP_POST_VARS[URL_CAT_ID])) {
-    $cat_id = (isset($HTTP_POST_VARS[URL_CAT_ID])) ? intval($HTTP_POST_VARS[URL_CAT_ID]) : intval($HTTP_GET_VARS[URL_CAT_ID]);
+if (isset($_GET[URL_CAT_ID]) || isset($_POST[URL_CAT_ID])) {
+    $cat_id = (isset($_POST[URL_CAT_ID])) ? intval($_POST[URL_CAT_ID]) : intval($_GET[URL_CAT_ID]);
 } else {
     $cat_id = 0;
 }
 
-if (isset($HTTP_GET_VARS[URL_IMAGE_ID]) || isset($HTTP_POST_VARS[URL_IMAGE_ID])) {
-    $image_id = (isset($HTTP_POST_VARS[URL_IMAGE_ID])) ? intval($HTTP_POST_VARS[URL_IMAGE_ID]) : intval($HTTP_GET_VARS[URL_IMAGE_ID]);
+if (isset($_GET[URL_IMAGE_ID]) || isset($_POST[URL_IMAGE_ID])) {
+    $image_id = (isset($_POST[URL_IMAGE_ID])) ? intval($_POST[URL_IMAGE_ID]) : intval($_GET[URL_IMAGE_ID]);
 } else {
     $image_id = 0;
 }
 
-if (isset($HTTP_GET_VARS[URL_ID]) || isset($HTTP_POST_VARS[URL_ID])) {
-    $id = (isset($HTTP_POST_VARS[URL_ID])) ? intval($HTTP_POST_VARS[URL_ID]) : intval($HTTP_GET_VARS[URL_ID]);
+if (isset($_GET[URL_ID]) || isset($_POST[URL_ID])) {
+    $id = (isset($_POST[URL_ID])) ? intval($_POST[URL_ID]) : intval($_GET[URL_ID]);
 } else {
     $id = 0;
 }
 
-if (isset($HTTP_GET_VARS[URL_PAGE]) || isset($HTTP_POST_VARS[URL_PAGE])) {
-    $page = (isset($HTTP_POST_VARS[URL_PAGE])) ? intval($HTTP_POST_VARS[URL_PAGE]) : intval($HTTP_GET_VARS[URL_PAGE]);
+if (isset($_GET[URL_PAGE]) || isset($_POST[URL_PAGE])) {
+    $page = (isset($_POST[URL_PAGE])) ? intval($_POST[URL_PAGE]) : intval($_GET[URL_PAGE]);
     if (!$page) {
         $page = 1;
     }
@@ -278,14 +272,14 @@ if (isset($HTTP_GET_VARS[URL_PAGE]) || isset($HTTP_POST_VARS[URL_PAGE])) {
     $page = 1;
 }
 
-if (isset($HTTP_POST_VARS['show_result']) || isset($HTTP_GET_VARS['show_result'])) {
+if (isset($_POST['show_result']) || isset($_GET['show_result'])) {
     $show_result = 1;
 } else {
     $show_result = 0;
 }
 
-if (isset($HTTP_POST_VARS['search_keywords']) || isset($HTTP_GET_VARS['search_keywords'])) {
-    $search_keywords = (isset($HTTP_POST_VARS['search_keywords'])) ? trim((string)$HTTP_POST_VARS['search_keywords']) : trim((string)$HTTP_GET_VARS['search_keywords']);
+if (isset($_POST['search_keywords']) || isset($_GET['search_keywords'])) {
+    $search_keywords = (isset($_POST['search_keywords'])) ? trim((string)$_POST['search_keywords']) : trim((string)$_GET['search_keywords']);
     if ($search_keywords != "") {
         $show_result = 1;
     }
@@ -293,8 +287,8 @@ if (isset($HTTP_POST_VARS['search_keywords']) || isset($HTTP_GET_VARS['search_ke
     $search_keywords = "";
 }
 
-if (isset($HTTP_POST_VARS['search_user']) || isset($HTTP_GET_VARS['search_user'])) {
-    $search_user = (isset($HTTP_POST_VARS['search_user'])) ? trim((string)$HTTP_POST_VARS['search_user']) : trim((string)$HTTP_GET_VARS['search_user']);
+if (isset($_POST['search_user']) || isset($_GET['search_user'])) {
+    $search_user = (isset($_POST['search_user'])) ? trim((string)$_POST['search_user']) : trim((string)$_GET['search_user']);
     if ($search_user != "") {
         $show_result = 1;
     }
@@ -302,7 +296,7 @@ if (isset($HTTP_POST_VARS['search_user']) || isset($HTTP_GET_VARS['search_user']
     $search_user = "";
 }
 
-if (isset($HTTP_POST_VARS['search_new_images']) || isset($HTTP_GET_VARS['search_new_images'])) {
+if (isset($_POST['search_new_images']) || isset($_GET['search_new_images'])) {
     $search_new_images = 1;
     $show_result = 1;
 } else {
@@ -310,12 +304,12 @@ if (isset($HTTP_POST_VARS['search_new_images']) || isset($HTTP_GET_VARS['search_
 }
 
 if (empty($PHP_SELF)) {
-    if (!empty($HTTP_SERVER_VARS['PHP_SELF'])) {
-        $PHP_SELF = $HTTP_SERVER_VARS["PHP_SELF"];
-    } elseif (!empty($HTTP_ENV_VARS['PHP_SELF'])) {
-        $PHP_SELF = $HTTP_ENV_VARS["PHP_SELF"];
-    } elseif (!empty($HTTP_SERVER_VARS['PATH_INFO'])) {
-        $PHP_SELF = $HTTP_SERVER_VARS['PATH_INFO'];
+    if (!empty($_SERVER['PHP_SELF'])) {
+        $PHP_SELF = $_SERVER["PHP_SELF"];
+    } elseif (!empty($_ENV['PHP_SELF'])) {
+        $PHP_SELF = $_ENV["PHP_SELF"];
+    } elseif (!empty($_SERVER['PATH_INFO'])) {
+        $PHP_SELF = $_SERVER['PATH_INFO'];
     } else {
         $PHP_SELF = getenv("SCRIPT_NAME");
     }
@@ -346,8 +340,8 @@ if (empty($self_url) || !preg_match("/\.php$/", $self_url)) {
   }
 //}
 
-if (isset($HTTP_GET_VARS['url']) || isset($HTTP_POST_VARS['url'])) {
-    $url = (isset($HTTP_GET_VARS['url'])) ? trim($HTTP_GET_VARS['url']) : trim($HTTP_POST_VARS['url']);
+if (isset($_GET['url']) || isset($_POST['url'])) {
+    $url = (isset($_GET['url'])) ? trim($_GET['url']) : trim($_POST['url']);
 } else {
     $url = "";
 }
@@ -368,7 +362,7 @@ if (defined("SCRIPT_URL") && SCRIPT_URL != "") {
 } else {
     $port = (!preg_match("/^(80|443)$/", getenv("SERVER_PORT"), $port_match)) ? ":".getenv("SERVER_PORT") : "";
     $script_url  = (isset($port_match[1]) && $port_match[1] == 443) ? "https://" : "http://";
-    $script_url .= (!empty($HTTP_SERVER_VARS['HTTP_HOST'])) ? $HTTP_SERVER_VARS['HTTP_HOST'] : getenv("SERVER_NAME");
+    $script_url .= (!empty($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : getenv("SERVER_NAME");
     if ($port) {
         $script_url = str_replace(":".$port, "", $script_url);
     }
@@ -425,8 +419,8 @@ $site_template = new Template(TEMPLATE_PATH);
 
 $config['language_dir_default'] = $config['language_dir'];
 $l = null;
-if (isset($HTTP_GET_VARS['l']) || isset($HTTP_POST_VARS['l'])) {
-    $requested_l = (isset($HTTP_GET_VARS['l'])) ? trim($HTTP_GET_VARS['l']) : trim($HTTP_POST_VARS['l']);
+if (isset($_GET['l']) || isset($_POST['l'])) {
+    $requested_l = (isset($_GET['l'])) ? trim($_GET['l']) : trim($_POST['l']);
     if (!preg_match('#\.\.[\\\/]#', $requested_l) && $requested_l != $config['language_dir'] && file_exists(ROOT_PATH.'lang/'.$requested_l.'/main.php')) {
         $l = $requested_l;
         $config['language_dir'] = $l;
@@ -467,7 +461,7 @@ if ($config['gz_compress'] == 1 && !isset($nozip)) {
             ob_start("ob_gzhandler");
         }
     } elseif (get_php_version() > 40000) {
-        if (preg_match("/gzip/i", $HTTP_SERVER_VARS["HTTP_ACCEPT_ENCODING"]) || preg_match("/x-gzip/i", $HTTP_SERVER_VARS["HTTP_ACCEPT_ENCODING"])) {
+        if (preg_match("/gzip/i", $_SERVER["HTTP_ACCEPT_ENCODING"]) || preg_match("/x-gzip/i", $_SERVER["HTTP_ACCEPT_ENCODING"])) {
             if (extension_loaded("zlib")) {
                 $do_gzip_compress = 1;
                 ob_start();

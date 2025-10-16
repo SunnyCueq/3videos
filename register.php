@@ -56,7 +56,7 @@ if ($action == "signup") {
 //--- Add New User ------------------------------------
 //-----------------------------------------------------
 if ($action == "register") {
-  if (!isset($HTTP_POST_VARS['user_name'])) {
+  if (!isset($_POST['user_name'])) {
     if ($config['activation_time'] != 0) {
       $expiry = time() - 60 * 60 * 24 * $config['activation_time'];
       $sql = "DELETE FROM ".USERS_TABLE."
@@ -64,20 +64,20 @@ if ($action == "register") {
       $site_db->query($sql);
     }
   }
-  $user_name = (isset($HTTP_POST_VARS['user_name'])) ? un_htmlspecialchars(trim($HTTP_POST_VARS['user_name'])) : "";
+  $user_name = (isset($_POST['user_name'])) ? un_htmlspecialchars(trim($_POST['user_name'])) : "";
   $user_name = preg_replace("/( ){2,}/", " ", $user_name);
-  $user_password = (isset($HTTP_POST_VARS['user_password'])) ? trim($HTTP_POST_VARS['user_password']) : "";
-  $user_email = (isset($HTTP_POST_VARS['user_email'])) ? un_htmlspecialchars(trim($HTTP_POST_VARS['user_email'])) : "";
-  $user_showemail = (isset($HTTP_POST_VARS['user_showemail'])) ? intval($HTTP_POST_VARS['user_showemail']) : 0;
-  $user_allowemails = (isset($HTTP_POST_VARS['user_allowemails'])) ? intval($HTTP_POST_VARS['user_allowemails']) : 1;
-  $user_invisible = (isset($HTTP_POST_VARS['user_invisible'])) ? intval($HTTP_POST_VARS['user_invisible']) : 0;
-  $user_homepage = (isset($HTTP_POST_VARS['user_homepage'])) ? un_htmlspecialchars(trim($HTTP_POST_VARS['user_homepage'])) : "";
-  $user_icq = (isset($HTTP_POST_VARS['user_icq'])) ? ((intval(trim($HTTP_POST_VARS['user_icq']))) ? intval(trim($HTTP_POST_VARS['user_icq'])) : "") : "";
+  $user_password = (isset($_POST['user_password'])) ? trim($_POST['user_password']) : "";
+  $user_email = (isset($_POST['user_email'])) ? un_htmlspecialchars(trim($_POST['user_email'])) : "";
+  $user_showemail = (isset($_POST['user_showemail'])) ? intval($_POST['user_showemail']) : 0;
+  $user_allowemails = (isset($_POST['user_allowemails'])) ? intval($_POST['user_allowemails']) : 1;
+  $user_invisible = (isset($_POST['user_invisible'])) ? intval($_POST['user_invisible']) : 0;
+  $user_homepage = (isset($_POST['user_homepage'])) ? un_htmlspecialchars(trim($_POST['user_homepage'])) : "";
+  $user_icq = (isset($_POST['user_icq'])) ? ((intval(trim($_POST['user_icq']))) ? intval(trim($_POST['user_icq'])) : "") : "";
 
-  $captcha = (isset($HTTP_POST_VARS['captcha'])) ? un_htmlspecialchars(trim($HTTP_POST_VARS['captcha'])) : "";
+  $captcha = (isset($_POST['captcha'])) ? un_htmlspecialchars(trim($_POST['captcha'])) : "";
 
   $error = 0;
-  if (isset($HTTP_POST_VARS['user_name'])) {
+  if (isset($_POST['user_name'])) {
     if ($user_name != "") {
       $sql = "SELECT ".get_user_table_field("", "user_name")."
               FROM ".USERS_TABLE."
@@ -124,7 +124,7 @@ if ($action == "register") {
 
     if (!empty($additional_user_fields)) {
       foreach ($additional_user_fields as $key => $val) {
-        if (isset($HTTP_POST_VARS[$key]) && intval($val[2]) == 1 && trim($HTTP_POST_VARS[$key]) == "") {
+        if (isset($_POST[$key]) && intval($val[2]) == 1 && trim($_POST[$key]) == "") {
           $error = 1;
           $field_error = preg_replace("/".$site_template->start."field_name".$site_template->end."/siU", str_replace(":", "", $val[0]), $lang['field_required']);
           $msg .= (($msg != "") ? "<br />" : "").$field_error;
@@ -142,9 +142,9 @@ if ($action == "register") {
     if (!empty($additional_user_fields)) {
       $table_fields = $site_db->get_table_fields(USERS_TABLE);
       foreach ($additional_user_fields as $key => $val) {
-        if (isset($HTTP_POST_VARS[$key]) && isset($table_fields[$key])) {
+        if (isset($_POST[$key]) && isset($table_fields[$key])) {
           $additional_field_sql .= ", $key";
-          $additional_value_sql .= ", '".un_htmlspecialchars(trim($HTTP_POST_VARS[$key]))."'";
+          $additional_value_sql .= ", '".un_htmlspecialchars(trim($_POST[$key]))."'";
         }
       }
     }
@@ -270,7 +270,7 @@ if ($action == "register") {
       $additional_field_array = array();
       foreach ($additional_user_fields as $key => $val) {
         if ($val[1] == "radio") {
-          $value = (isset($HTTP_POST_VARS[$key])) ? intval($HTTP_POST_VARS[$key]) : 1;
+          $value = (isset($_POST[$key])) ? intval($_POST[$key]) : 1;
           if ($value == 1) {
             $additional_field_array[$key.'_yes'] = " checked=\"checked\"";
             $additional_field_array[$key.'_no'] = "";
@@ -281,7 +281,7 @@ if ($action == "register") {
           }
         }
         else {
-          $value = (isset($HTTP_POST_VARS[$key])) ? format_text(trim($HTTP_POST_VARS[$key]), 2) : "";
+          $value = (isset($_POST[$key])) ? format_text(trim($_POST[$key]), 2) : "";
         }
         $additional_field_array[$key] = $value;
         $additional_field_array['lang_'.$key] = $val[0];
@@ -302,7 +302,7 @@ if ($action == "activate") {
             WHERE (".get_user_table_field("", "user_lastaction")." < $expiry) AND ".get_user_table_field("", "user_level")." = ".USER_AWAITING;
     $site_db->query($sql);
   }
-  if (!isset($HTTP_GET_VARS['activationkey'])){
+  if (!isset($_GET['activationkey'])){
     $msg = $lang['missing_activationkey'];
   }
   else {
@@ -310,7 +310,7 @@ if ($action == "activate") {
       show_error_page($lang['no_permission']);
       exit;
     }
-    $activationkey = trim($HTTP_GET_VARS['activationkey']);
+    $activationkey = trim($_GET['activationkey']);
     $sql = "SELECT ".get_user_table_field("", "user_name").get_user_table_field(", ", "user_email").get_user_table_field(", ", "user_activationkey")."
             FROM ".USERS_TABLE."
             WHERE ".get_user_table_field("", "user_activationkey")." = '$activationkey'";

@@ -33,30 +33,23 @@ class Db {
   var $table_fields = array();
 
   function __construct($db_host, $db_user, $db_password = "", $db_name = "", $db_pconnect = 0) {
-    $connect_handle = ($db_pconnect) ? "mysql_pconnect" : "mysql_connect";
-    if (!$this->connection = @$connect_handle($db_host, $db_user, $db_password)) {
+    if (!$this->connection = @mysqli_connect($db_host, $db_user, $db_password, $db_name)) {
       $this->error("Could not connect to the database server (".safe_htmlspecialchars($db_host).", ".safe_htmlspecialchars($db_user).").", 1);
     }
-    if ($db_name != "") {
-      if (!@mysql_select_db($db_name)) {
-        @mysql_close($this->connection);
-        $this->error("Could not select database (".safe_htmlspecialchars($db_name).").", 1);
-      }
-    }
-    mysql_set_charset('utf8', $this->connection);
+    mysqli_set_charset($this->connection, 'utf8');
     return $this->connection;
   }
 
   function escape($value) {
-    return mysql_real_escape_string($value, $this->connection);
+    return mysqli_real_escape_string($this->connection, $value);
   }
 
   function close() {
     if ($this->connection) {
-      if ($this->query_id) {
-        @mysql_free_result($this->query_id);
+      if ($this->query_id instanceof mysqli_result) {
+        @mysqli_free_result($this->query_id);
       }
-      return @mysql_close($this->connection);
+      return @mysqli_close($this->connection);
     }
     else {
       return false;
@@ -69,8 +62,8 @@ class Db {
       if ((defined("PRINT_QUERIES") && PRINT_QUERIES == 1) || (defined("PRINT_STATS") && PRINT_STATS == 1)) {
         $startsqltime = explode(" ", microtime());
       }
-      if (!$this->query_id = @mysql_query($query, $this->connection)) {
-        $this->error("<b>Bad SQL Query</b>: ".safe_htmlspecialchars($query)."<br /><b>".safe_htmlspecialchars(mysql_error())."</b>");
+      if (!$this->query_id = @mysqli_query($this->connection, $query)) {
+        $this->error("<b>Bad SQL Query</b>: ".safe_htmlspecialchars($query)."<br /><b>".safe_htmlspecialchars(mysqli_error($this->connection))."</b>");
       }
       if ((defined("PRINT_QUERIES") && PRINT_QUERIES == 1) || (defined("PRINT_STATS") && PRINT_STATS == 1)) {
         $endsqltime = explode(" ", microtime());
@@ -87,20 +80,24 @@ class Db {
     }
   }
 
-  function fetch_array($query_id = -1, $assoc = 0) {
-    if ($query_id != -1) {
+  function fetch_array($query_id = null, $assoc = 0) {
+    if ($query_id !== null && $query_id !== -1) {
       $this->query_id = $query_id;
     }
-    if ($this->query_id) {
-      return ($assoc) ? mysql_fetch_assoc($this->query_id) : mysql_fetch_array($this->query_id);
+    if ($this->query_id && $this->query_id instanceof mysqli_result) {
+      return ($assoc) ? mysqli_fetch_assoc($this->query_id) : mysqli_fetch_array($this->query_id);
     }
+    return false;
   }
 
-  function free_result($query_id = -1) {
-    if ($query_id != -1) {
+  function free_result($query_id = null) {
+    if ($query_id !== null && $query_id !== -1) {
       $this->query_id = $query_id;
     }
-    return @mysql_free_result($this->query_id);
+    if ($this->query_id instanceof mysqli_result) {
+      return @mysqli_free_result($this->query_id);
+    }
+    return false;
   }
 
   function query_firstrow($query = "") {
@@ -112,15 +109,18 @@ class Db {
     return $result;
   }
 
-  function get_numrows($query_id = -1) {
-    if ($query_id != -1) {
+  function get_numrows($query_id = null) {
+    if ($query_id !== null && $query_id !== -1) {
       $this->query_id = $query_id;
     }
-    return mysql_num_rows($this->query_id);
+    if ($this->query_id instanceof mysqli_result) {
+      return mysqli_num_rows($this->query_id);
+    }
+    return 0;
   }
 
   function get_insert_id() {
-    return ($this->connection) ? @mysql_insert_id($this->connection) : 0;
+    return ($this->connection) ? @mysqli_insert_id($this->connection) : 0;
   }
 
   function get_next_id($column = "", $table = "") {
@@ -135,43 +135,60 @@ class Db {
     }
   }
 
-  function get_numfields($query_id = -1) {
-    if ($query_id != -1) {
+  function get_numfields($query_id = null) {
+    if ($query_id !== null && $query_id !== -1) {
       $this->query_id = $query_id;
     }
-    return @mysql_num_fields($this->query_id);
+    if ($this->query_id instanceof mysqli_result) {
+      return @mysqli_num_fields($this->query_id);
+    }
+    return 0;
   }
 
-  function get_fieldname($query_id = -1, $offset) {
-    if ($query_id != -1) {
+  function get_fieldname($query_id = null, $offset) {
+    if ($query_id !== null && $query_id !== -1) {
       $this->query_id = $query_id;
     }
-    return @mysql_field_name($this->query_id, $offset);
+    if ($this->query_id instanceof mysqli_result) {
+      $field_info = mysqli_fetch_field_direct($this->query_id, $offset);
+      return $field_info ? $field_info->name : false;
+    }
+    return false;
   }
 
-  function get_fieldtype($query_id = -1, $offset) {
-    if ($query_id != -1) {
+  function get_fieldtype($query_id = null, $offset) {
+    if ($query_id !== null && $query_id !== -1) {
       $this->query_id = $query_id;
     }
-    return @mysql_field_type($this->query_id, $offset);
+    if ($this->query_id instanceof mysqli_result) {
+      $field_info = mysqli_fetch_field_direct($this->query_id, $offset);
+      return $field_info ? $field_info->type : false;
+    }
+    return false;
   }
 
   function affected_rows() {
-    return ($this->connection) ? @mysql_affected_rows($this->connection) : 0;
+    return ($this->connection) ? @mysqli_affected_rows($this->connection) : 0;
   }
 
   function is_empty($query = "") {
     if ($query != "") {
       $this->query($query);
     }
-    return (!mysql_num_rows($this->query_id)) ? 1 : 0;
+    if ($this->query_id instanceof mysqli_result) {
+      return (!mysqli_num_rows($this->query_id)) ? 1 : 0;
+    }
+    return 1;
   }
 
   function not_empty($query = "") {
     if ($query != "") {
       $this->query($query);
     }
-    return (!mysql_num_rows($this->query_id)) ? 0 : 1;
+    if ($this->query_id instanceof mysqli_result) {
+      return (!mysqli_num_rows($this->query_id)) ? 0 : 1;
+    }
+    return 0;
   }
 
   function get_table_fields($table) {

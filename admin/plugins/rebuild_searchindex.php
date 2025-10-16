@@ -69,8 +69,8 @@ if (!defined('MAX_SEARCH_KEYWORD_LENGTH')) {
   define('MAX_SEARCH_KEYWORD_LENGTH', 25);
 }
 
-if (isset($HTTP_GET_VARS['batchstart']) || isset($HTTP_POST_VARS['batchstart'])) {
-  $batchstart = (isset($HTTP_GET_VARS['batchstart'])) ? intval($HTTP_GET_VARS['batchstart']) : intval($HTTP_POST_VARS['batchstart']);
+if (isset($_GET['batchstart']) || isset($_POST['batchstart'])) {
+  $batchstart = (isset($_GET['batchstart'])) ? intval($_GET['batchstart']) : intval($_POST['batchstart']);
   $site_sess->set_session_var("rsibatchstart", $batchstart);
 }
 else {
@@ -78,12 +78,12 @@ else {
   $batchstart = $batchstart !== "" ? intval($batchstart) : 0;
 }
 
-if (isset($HTTP_GET_VARS['batchsize']) || isset($HTTP_POST_VARS['batchsize'])) {
-  $batchsize = (isset($HTTP_GET_VARS['batchsize'])) ? intval($HTTP_GET_VARS['batchsize']) : intval($HTTP_POST_VARS['batchsize']);
+if (isset($_GET['batchsize']) || isset($_POST['batchsize'])) {
+  $batchsize = (isset($_GET['batchsize'])) ? intval($_GET['batchsize']) : intval($_POST['batchsize']);
   if (!$batchsize) {
     $batchsize = 25;
   }
-  if (isset($HTTP_POST_VARS['batchsize'])) {
+  if (isset($_POST['batchsize'])) {
     $site_sess->set_session_var("rsibatchsize", $batchsize);
   }
 }
@@ -94,13 +94,13 @@ else {
   }
 }
 
-if (isset($HTTP_POST_VARS['cat_id'])) {
+if (isset($_POST['cat_id'])) {
   $site_sess->set_session_var("rsicatid", $cat_id);
 }
 
-if (isset($HTTP_GET_VARS['autoredirect']) || isset($HTTP_POST_VARS['autoredirect'])) {
-  $autoredirect = (isset($HTTP_GET_VARS['autoredirect'])) ? intval($HTTP_GET_VARS['autoredirect']) : intval($HTTP_POST_VARS['autoredirect']);
-  if (isset($HTTP_POST_VARS['autoredirect'])) {
+if (isset($_GET['autoredirect']) || isset($_POST['autoredirect'])) {
+  $autoredirect = (isset($_GET['autoredirect'])) ? intval($_GET['autoredirect']) : intval($_POST['autoredirect']);
+  if (isset($_POST['autoredirect'])) {
     $site_sess->set_session_var("rsiautoredirect", $autoredirect);
   }
 }
@@ -109,9 +109,9 @@ else {
   $autoredirect = $autoredirect !== "" ? intval($autoredirect) : 1;
 }
 
-if (isset($HTTP_GET_VARS['subcat']) || isset($HTTP_POST_VARS['subcat'])) {
-  $subcat = (isset($HTTP_GET_VARS['subcat'])) ? intval($HTTP_GET_VARS['subcat']) : intval($HTTP_POST_VARS['subcat']);
-  if (isset($HTTP_POST_VARS['subcat'])) {
+if (isset($_GET['subcat']) || isset($_POST['subcat'])) {
+  $subcat = (isset($_GET['subcat'])) ? intval($_GET['subcat']) : intval($_POST['subcat']);
+  if (isset($_POST['subcat'])) {
     $site_sess->set_session_var("rsisubcat", $subcat);
   }
 }

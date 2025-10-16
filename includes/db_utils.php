@@ -144,7 +144,7 @@ function get_table_content_mysql($table, $crlf)
                     if (get_php_version() >= 40005) {
                         $row[$i] = str_replace($search_array, $replace_array, $row[$i]);
                     } else {
-                        for ($i = 0; $i < sizeof($search_array); $i++) {
+                        for ($i = 0; $i < count($search_array); $i++) {
                             $row[$i] = str_replace($search_array[$i], $replace_array[$i], $row[$i]);
                         }
                     }
