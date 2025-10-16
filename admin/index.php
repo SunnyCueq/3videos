@@ -145,7 +145,7 @@ if ($action == "nav") {
     show_nav_header($lang['nav_general_main']);
     show_nav_option($lang['nav_general_settings'], "settings.php?action=modifysettings");
     show_nav_option($lang['nav_general_templates'], "templates.php?action=modifytemplates");
-    show_nav_option($lang['nav_general_backup'], "backup.php?action=modifybackups");
+
     show_nav_option($lang['nav_general_stats'], "stats.php?action=resetstats");
     show_nav_option("phpinfo()", "phpinfo.php");
 

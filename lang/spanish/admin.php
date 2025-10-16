@@ -197,7 +197,6 @@ $lang['nav_users_email'] = "Enviar correo";
 $lang['nav_general_main'] = "General";
 $lang['nav_general_settings'] = "Opciones";
 $lang['nav_general_templates'] = "Plantillas";
-$lang['nav_general_backup'] = "Guardar Base de Datos";
 $lang['nav_general_stats'] = "Restablecer estadísticas";
 
 //-----------------------------------------------------
@@ -351,22 +350,6 @@ $lang['template_edit_error'] = "'¡Error guardando plantilla! Compruebe los perm
 //-----------------------------------------------------
 //--- Backup ------------------------------------------
 //-----------------------------------------------------
-$lang['do_backup'] = "Copia de seguridad de base de datos";
-$lang['do_backup_desc'] = "Realizar copia de seguridad de base de datos.<br /> <span class=\"smalltext\">Seleccione las tablas de la base de datos que quiere actualizar. Las tablas requeridas están preseleccionadas.";
-$lang['list_backups'] = "Listar copias de seguridad";
-$lang['no_backups'] = "No hay copias de seguridad";
-$lang['restore_backup'] = "Restaurar";
-$lang['delete_backup'] = "Eliminar";
-$lang['download_backup'] = "Descargar";
-$lang['show_backup'] = "Mostrar";
-$lang['make_backup_success'] = "Copia de seguridad guardada satisfactoriamente.";
-$lang['make_backup_error'] = "Error guardando copia de seguridad. Compruebe los permisos (chmod 777).";
-$lang['backup_delete_confirm'] = "¿Eliminar copia de seguridad?";
-$lang['backup_delete_success'] = "Copia de seguridad eliminada";
-$lang['backup_delete_error'] = "Error eliminando copia de seguridad";
-$lang['backup_restore_confirm'] = "¿Restaurar base de datos?";
-$lang['backup_restore_success'] = "Base de datos restaurada";
-$lang['backup_restore_error'] = "Errores restaurando la copia de seguridad:";
 
 //-----------------------------------------------------
 //--- Thumbnailer & Resizer ---------------------------

@@ -203,7 +203,6 @@ $lang['nav_users_email'] = "Send email";
 $lang['nav_general_main'] = "General";
 $lang['nav_general_settings'] = "Settings";
 $lang['nav_general_templates'] = "Edit Templates";
-$lang['nav_general_backup'] = "Backup database";
 $lang['nav_general_stats'] = "Reset Stats";
 
 //-----------------------------------------------------
@@ -357,22 +356,6 @@ $lang['template_edit_error'] = "Error saving template! Check your permissions (c
 //-----------------------------------------------------
 //--- Backup ------------------------------------------
 //-----------------------------------------------------
-$lang['do_backup'] = "Database Backup";
-$lang['do_backup_desc'] = "Backup database.<br /> <span class=\"smalltext\">Select database tables to be updated. Required tables are preselected.";
-$lang['list_backups'] = "List backups";
-$lang['no_backups'] = "No backups";
-$lang['restore_backup'] = "Restore";
-$lang['delete_backup'] = "Delete";
-$lang['download_backup'] = "Download";
-$lang['show_backup'] = "Show";
-$lang['make_backup_success'] = "Database backed up.";
-$lang['make_backup_error'] = "Error backing up. Check your permissions (chmod 777).";
-$lang['backup_delete_confirm'] = "Delete backup?";
-$lang['backup_delete_success'] = "Backup deleted";
-$lang['backup_delete_error'] = "Error deleting backup";
-$lang['backup_restore_confirm'] = "Restore database?";
-$lang['backup_restore_success'] = "Database restored";
-$lang['backup_restore_error'] = "Errors while backing up:";
 
 //-----------------------------------------------------
 //--- Thumbnailer & Resizer ---------------------------
@@ -447,8 +430,6 @@ $lang['cni_copy_error'] = "<u>Error</u> copying file into <b>{name}</b> folder."
 $lang['cni_copy_thumb_success'] = "Copied thumbnail into <b>{name}</b> folder.";
 $lang['cni_copy_thumb_error'] = "<u>Error</u> copying thumbnail into <b>{name}</b> folder.";
 
-$lang['cni_backup_success'] = "Backup original file into <b>{name}</b> folder.";
-$lang['cni_backup_error'] = "<u>Error</u> copying original file into <b>{name}</b> folder.";
 $lang['cni_annotation_success'] = "Added annotation in <b>{name}</b> file.";
 $lang['cni_annotation_error'] = "<u>Error</u> adding annotation in <b>{name}</b> file.";
 $lang['cni_create_folder_success'] = "Created <b>{name}/</b> folder.";

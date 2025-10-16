@@ -196,7 +196,6 @@ $lang['nav_users_email'] = "Email versenden";
 $lang['nav_general_main'] = "Allgemein";
 $lang['nav_general_settings'] = "Einstellungen";
 $lang['nav_general_templates'] = "Templates bearbeiten";
-$lang['nav_general_backup'] = "Datenbank Backup";
 $lang['nav_general_stats'] = "Statistiken zurücksetzen";
 
 //-----------------------------------------------------
@@ -350,22 +349,6 @@ $lang['template_edit_error'] = "Fehler beim Speichern des Templates! Überprüfe
 //-----------------------------------------------------
 //--- Backup ------------------------------------------
 //-----------------------------------------------------
-$lang['do_backup'] = "Backup erstellen";
-$lang['do_backup_desc'] = "Hier können Sie ein Backup Ihrer aktuellen Datenbank erstellen.<br /><span class=\"smalltext\">In der Auswahl-Liste sehen Sie alle Tabellen Ihrer Datenbank. Die von der Galerie benötigten Tabellen sind vorausgewählt.";
-$lang['list_backups'] = "Vorhandene Backups";
-$lang['no_backups'] = "Keine Backups vorhanden";
-$lang['restore_backup'] = "Wiederherstellen";
-$lang['delete_backup'] = "Löschen";
-$lang['download_backup'] = "Downloaden";
-$lang['show_backup'] = "Anzeigen";
-$lang['make_backup_success'] = "Backup erfolgreich erstellt.";
-$lang['make_backup_error'] = "Fehler beim Erstellen des Backups. Überprüfen Sie ob die Zugriffsrechte richtig gesetzt sind (chmod 777).";
-$lang['backup_delete_confirm'] = "Wollen Sie diese Backup-Datei wirklich löschen:";
-$lang['backup_delete_success'] = "Backup-Datei erfolgreich gelöscht";
-$lang['backup_delete_error'] = "Fehler beim Löschen der Backup-Datei";
-$lang['backup_restore_confirm'] = "Wollen Sie die Datenbank wirklich wiederherstellen:";
-$lang['backup_restore_success'] = "Datenbank erfolgreich wiederhergestellt";
-$lang['backup_restore_error'] = "Folgende Fehler sind beim Wiederherstellen der Datenbank aufgetreten:";
 
 //-----------------------------------------------------
 //--- Thumbnailer & Resizer ---------------------------
@@ -439,8 +422,6 @@ $lang['cni_copy_error'] = "<u>Fehler</u> beim Kopieren der Datei in den Ordner <
 $lang['cni_copy_thumb_success'] = "Thumbnail wurde in den Ordner <b>{name}</b> kopiert.";
 $lang['cni_copy_thumb_error'] = "<u>Fehler</u> beim Kopieren des Thumbnails in den Ordner <b>{name}</b>.";
 
-$lang['cni_backup_success'] = "Kopiere Original Datei in <b>{name}</b> Ordner.";
-$lang['cni_backup_error'] = "<u>Fehler</u> bei kopieren der Original Datei in <b>{name}</b> Ordner.";
 $lang['cni_annotation_success'] = "Wasserzeichen hinzufügen in <b>{name}</b> Datei.";
 $lang['cni_annotation_error'] = "<u>Fehler</u> bei hinzufügen des Wasserzeichens in <b>{name}</b> Datei.";
 $lang['cni_create_folder_success'] = "Erstelle <b>{name}/</b> Ordner.";
