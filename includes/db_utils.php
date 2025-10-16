@@ -23,6 +23,14 @@ if (!defined('ROOT_PATH')) {
     die("Security violation");
 }
 
+function validate_table_name($table) {
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+        error_log('Invalid table name attempted: ' . $table);
+        die('Security Error: Invalid table name');
+    }
+    return '`' . str_replace('`', '``', $table) . '`';
+}
+
 function split_sql_dump($sql)
 {
     $sql = preg_replace("/\r/s", "\n", $sql);
@@ -57,18 +65,19 @@ function split_sql_dump($sql)
 function get_table_def_mysql($table, $crlf)
 {
     global $site_db, $tables_info;
-    $dump  = "DROP TABLE IF EXISTS $table;$crlf";
+    $safe_table = validate_table_name($table);
+    $dump  = "DROP TABLE IF EXISTS $safe_table;$crlf";
     if (get_mysql_version() >= 32321) {
         $site_db->query('SET SQL_QUOTE_SHOW_CREATE = 0');
-        if ($row = $site_db->query_firstrow("SHOW CREATE TABLE $table")) {
+        if ($row = $site_db->query_firstrow("SHOW CREATE TABLE $safe_table")) {
             $dump .= str_replace("\n", $crlf, $row[1]);
         }
         $site_db->free_result();
         echo $dump.";".$crlf;
         return true;
     }
-    $dump .= "CREATE TABLE $table (".$crlf;
-    $result = $site_db->query("SHOW FIELDS FROM $table");
+    $dump .= "CREATE TABLE $safe_table (".$crlf;
+    $result = $site_db->query("SHOW FIELDS FROM $safe_table");
     while ($row = $site_db->fetch_array($result)) {
         $dump .= "   ".$row['Field']." ".((isset($row['Type'])) ? $row['Type'] : $row['Engine']);
         if ($row['Null'] != "YES") {
@@ -85,7 +94,7 @@ function get_table_def_mysql($table, $crlf)
     $dump = preg_replace("/,".$crlf."$/", "", $dump);
     $site_db->free_result();
 
-    $result = $site_db->query("SHOW KEYS FROM $table");
+    $result = $site_db->query("SHOW KEYS FROM $safe_table");
     $index = array();
     while ($row = $site_db->fetch_array($result)) {
         if ($row['Key_name'] != "PRIMARY" && $row['Non_unique'] == 0) {
@@ -117,9 +126,10 @@ function get_table_def_mysql($table, $crlf)
 function get_table_content_mysql($table, $crlf)
 {
     global $site_db;
-    $result = $site_db->query("SELECT * FROM $table");
+    $safe_table = validate_table_name($table);
+    $result = $site_db->query("SELECT * FROM $safe_table");
     if ($result && $site_db->get_numrows($result)) {
-        echo $crlf."#".$crlf."# Table Data for ".$table.$crlf."#".$crlf;
+        echo $crlf."#".$crlf."# Table Data for ".$safe_table.$crlf."#".$crlf;
 
         $column_list = "";
         $num_fields = $site_db->get_numfields($result);
@@ -129,7 +139,7 @@ function get_table_content_mysql($table, $crlf)
     }
 
     while ($row = $site_db->fetch_array($result)) {
-        $dump = "INSERT INTO ".$table." (".$column_list.") VALUES (";
+        $dump = "INSERT INTO ".$safe_table." (".$column_list.") VALUES (";
         for ($i = 0; $i < $num_fields; $i++) {
             $dump .= ($i > 0) ? ", " : "";
             if (!isset($row[$i])) {

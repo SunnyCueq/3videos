@@ -25,12 +25,20 @@ $main_template = 0;
 $nozip = 1;
 define('GET_CACHES', 1);
 define('ROOT_PATH', './');
-include(ROOT_PATH.'global.php');
+$global_file = realpath(ROOT_PATH.'global.php');
+if ($global_file === false || !file_exists($global_file) || dirname($global_file) !== realpath(ROOT_PATH)) {
+  die('Security Error: Invalid file path');
+}
+include($global_file);
 require(ROOT_PATH.'includes/sessions.php');
 $user_access = get_permission();
 
 if (!function_exists('file_get_contents')) {
   function file_get_contents($filename, $incpath = false, $resource_context = null) {
+    if (strpos($filename, '..') !== false) {
+      user_error('file_get_contents() failed: Path traversal detected', E_USER_WARNING);
+      return false;
+    }
     if (false === $fh = fopen($filename, 'rb', $incpath)) {
       user_error('file_get_contents() failed to open stream: No such file or directory', E_USER_WARNING);
       return false;

@@ -197,24 +197,38 @@ if ($action == "updatesettings") {
   $setting_item = $_POST['setting_item'];
   foreach ($setting_item as $key => $val) {
     $val = trim($val);
+    $safe_key = $site_db->escape_string($key);
+    $safe_val = $site_db->escape_string($val);
     
-    $sql = "SELECT * FROM ".SETTINGS_TABLE." WHERE setting_name = '$key'";
+    $sql = "SELECT * FROM ".SETTINGS_TABLE." WHERE setting_name = '$safe_key'";
     $res = $site_db->get_numrows($site_db->query($sql));
 
     if ( !$res > 0 ) {
         $sql = "INSERT INTO ".SETTINGS_TABLE." (setting_value, setting_name)
-                VALUES ('$val', '$key');";
+                VALUES ('$safe_val', '$safe_key');";
     } else {
         $sql = "UPDATE ".SETTINGS_TABLE."
-                SET setting_value = '$val'
-                WHERE setting_name = '$key'";    
+                SET setting_value = '$safe_val'
+                WHERE setting_name = '$safe_key'";    
     }
     
     $res = $site_db->query($sql);
   }
 
-  if ($_POST['setting_item']['language_dir'] != $config['language_dir']) {
-    include(ROOT_PATH.'lang/'.$_POST['setting_item']['language_dir'].'/admin.php');
+  if (isset($_POST['setting_item']['language_dir']) && $_POST['setting_item']['language_dir'] != $config['language_dir']) {
+    $language_dir = basename($_POST['setting_item']['language_dir']);
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $language_dir)) {
+      error_log('Invalid language_dir attempted: ' . $_POST['setting_item']['language_dir']);
+      die('Security Error: Invalid language directory');
+    }
+    $lang_file = ROOT_PATH.'lang/'.$language_dir.'/admin.php';
+    $real_lang_file = realpath($lang_file);
+    $real_lang_dir = realpath(ROOT_PATH.'lang');
+    if (!$real_lang_file || !$real_lang_dir || strpos($real_lang_file, $real_lang_dir) !== 0 || !file_exists($real_lang_file)) {
+      error_log('Path traversal attempt in language_dir: ' . $_POST['setting_item']['language_dir']);
+      die('Security Error: Invalid language file path');
+    }
+    include($real_lang_file);
 ?>
     <script language="javascript">
     <!--
