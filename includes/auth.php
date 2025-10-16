@@ -79,7 +79,7 @@ function get_permission() {
     }
   }
 
-  $user_access = array();
+  $user_access = [];
   if ($user_info['user_id'] != 0 && $user_info['user_level'] != GUEST && $user_info['user_level'] != USER_AWAITING) {
     $current_time = time();
     /*

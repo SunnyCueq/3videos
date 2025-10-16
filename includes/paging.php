@@ -24,8 +24,9 @@ if (!defined('ROOT_PATH')) {
 }
 
 class Paging {
-  var $page,$offset,$perpage,$num_rows_all,$link_args;
-  var $first,$last,$total_pages,$config,$desc,$next,$back;
+  public $page,$offset,$perpage,$num_rows_all,$link_args;
+  public $first,$last,$total_pages,$config,$desc,$next,$back;
+  public $paging_next,$paging_back,$paging_lastpage,$paging_firstpage,$range;
 
   function __construct($page = 1, $perpage = 0, $num_rows_all = 0, $link_args = "") {
     global $lang, $config;
@@ -120,18 +121,18 @@ class Paging {
 
   function get_paging_stats() {
     global $site_template;
-    $search_array = array(
+    $search_array = [
       "/".$site_template->start."total_cat_images".$site_template->end."/iU",
       "/".$site_template->start."total_pages".$site_template->end."/iU",
       "/".$site_template->start."first_page".$site_template->end."/iU",
       "/".$site_template->start."last_page".$site_template->end."/iU"
-    );
-    $replace_array = array(
+    ];
+    $replace_array = [
       $this->num_rows_all,
       $this->total_pages,
       $this->first,
       $this->last
-    );
+    ];
     $this->desc = preg_replace($search_array, $replace_array, $this->desc);
     return $this->desc;
   }

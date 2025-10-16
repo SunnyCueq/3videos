@@ -260,16 +260,16 @@ class Template
 
     public function clean_template($template)
     {
-        $search_array = array(
+        $search_array = [
       '='.preg_quote($this->start).'([A-Z0-9_]+)'.preg_quote($this->end).'=Usi',
       '='.preg_quote($this->start).'if(not?)?\s+([A-Z0-9_]+)'.preg_quote($this->end).'=Usi',
       '='.preg_quote($this->start).'endif(not?)?\s+([A-Z0-9_]+)'.preg_quote($this->end).'=Usi',
-    );
-        $replace_array = array(
+    ];
+        $replace_array = [
       "",
       "",
       ""
-    );
+    ];
         $template = preg_replace($search_array, $replace_array, $template);
 
         return $template;

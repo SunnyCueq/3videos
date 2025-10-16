@@ -515,7 +515,7 @@ function get_media_code($media_file_name, $image_id = 0, $cat_id = 0, $image_nam
     $exif_info = "";
     if (!is_remote($media_src)) {
       $src = (!file_exists($media_src) && file_exists(preg_replace("/\/{2,}/", "/", get_document_root()."/".$media_src))) ? preg_replace("/\/{2,}/", "/", get_document_root()."/".$media_src) : $media_src;
-      if (in_array(strtolower($file_extension), array('gif','jpg','jpeg','png','swf')) && $image_info = @getimagesize($src, $info)) {
+      if (in_array(strtolower($file_extension), ['gif','jpg','jpeg','png','swf']) && $image_info = @getimagesize($src, $info)) {
         $width_height = " ".$image_info[3];
         $width = $image_info[0];
         $height = $image_info[1];
@@ -524,11 +524,11 @@ function get_media_code($media_file_name, $image_id = 0, $cat_id = 0, $image_nam
           $bgcounter = 0;
           foreach ($iptc_array as $key => $val) {
             $row_bg_number = ($bgcounter++ % 2 == 0) ? 1 : 2;
-            $site_template->register_vars(array(
+            $site_template->register_vars([
               "iptc_value" => format_text($val),
               "iptc_name" => $lang['iptc_'.$key],
               "row_bg_number" => $row_bg_number
-            ));
+            ]);
             $iptc_info .= $site_template->parse_template("iptc_bit");
           }
         }
@@ -537,17 +537,17 @@ function get_media_code($media_file_name, $image_id = 0, $cat_id = 0, $image_nam
           $bgcounter = 0;
           foreach ($exif_array as $key => $val) {
             $row_bg_number = ($bgcounter++ % 2 == 0) ? 1 : 2;
-            $site_template->register_vars(array(
+            $site_template->register_vars([
               "exif_value" => format_text($val),
               "exif_name" => $lang['exif_'.$key],
               "row_bg_number" => $row_bg_number
-            ));
+            ]);
             $exif_info .= $site_template->parse_template("exif_bit");
           }
         }
       }
     }
-    $site_template->register_vars(array(
+    $site_template->register_vars([
       "media_src" => $media_src,
       "media_icon" => $media_icon,
       "image_name" => format_text($image_name, 2),
@@ -556,7 +556,7 @@ function get_media_code($media_file_name, $image_id = 0, $cat_id = 0, $image_nam
       "height" => $height,
       "iptc_info" => $iptc_info,
       "exif_info" => $exif_info
-    ));
+    ]);
     $media = $site_template->parse_template("media/".$file_extension);
   }
   return $media;
@@ -733,15 +733,15 @@ function format_url($url) {
 
 function replace_url($text) {
   $text = " ".$text." ";
-  $url_search_array = array(
+  $url_search_array = [
     "#([^]_a-z0-9-=\"'\/])www\.([a-z0-9\-]+)\.([a-z0-9\-.\~]+)((?:/[^, \(\)<>\n\r]*)?)#si",
     "#([^]_a-z0-9-=\"'\/])([a-z]+?)://([^, \(\)<>\n\r]+)#si"
-  );
+  ];
 
-  $url_replace_array = array(
+  $url_replace_array = [
     "\\1<a href=\"http://www.\\2.\\3\\4\" target=\"_blank\" rel=\"nofollow\">www.\\2.\\3\\4</a>",
     "\\1<a href=\"\\2://\\3\" target=\"_blank\" rel=\"nofollow\">\\2://\\3</a>",
-  );
+  ];
   $text = preg_replace($url_search_array, $url_replace_array, $text);
 
   if (strpos($text, "@")) {
@@ -800,7 +800,7 @@ function format_text($text, $html = 0, $word_wrap = 0, $bbcode = 0, $bbcode_img 
   }
 
   if ($bbcode == 1) {
-    $search_array = array(
+    $search_array = [
       "/(\[)(list)(=)(['\"]?)([^\"']*)(\\4])(.*)(\[\/list)(((=)(\\4)([^\"']*)(\\4]))|(\]))/siU",
       "/(\[)(list)(])(.*)(\[\/list\])/siU",
       "/(\[\*\])/siU",
@@ -812,8 +812,8 @@ function format_text($text, $html = 0, $word_wrap = 0, $bbcode = 0, $bbcode_img 
       "/(\[)(code)(])(\r\n)*(.*)(\[\/code\])/siU",
       "/javascript:/si",
       "/about:/si"
-    );
-    $replace_array = array(
+    ];
+    $replace_array = [
       "<ol type=\"\\5\">\\7</ol>",
       "<ul>\\4</ul>",
       "<li>",
@@ -825,7 +825,7 @@ function format_text($text, $html = 0, $word_wrap = 0, $bbcode = 0, $bbcode_img 
       "<pre>Code:<hr size=1>\\5<hr size=1></pre>",
       "java script:",
       "about :"
-    );
+    ];
     $text = preg_replace($search_array, $replace_array, $text);
     if (!$bbcode_img)  {
       $text = preg_replace("/(\[)(img)(])(\r\n)*([^\"]*)(\[\/img\])/siU", "<a href=\"\\5\" target=\"_blank\">\\5</a>", $text);
@@ -850,14 +850,14 @@ function utf8_to_htmlentities($source) {
   // value
   // according to number of characters used to map unicode to ascii by
   // utf-8
-  $decrement = array();
+  $decrement = [];
   $decrement[4] = 240;
   $decrement[3] = 224;
   $decrement[2] = 192;
   $decrement[1] = 0;
 
   // the number of bits to shift each charNum by
-  $shift = array();
+  $shift = [];
   $shift[1][0] = 0;
   $shift[2][0] = 6;
   $shift[2][1] = 0;
@@ -1350,7 +1350,7 @@ function get_category_dropdown($cat_id, $jump = 0, $admin = 0, $i = 0) {
     $category .= "<option value=\"0\">-------------------------------</option>\n";
   } // end switch
 
-  $drop_down_cat_cache = array();
+  $drop_down_cat_cache = [];
   $drop_down_cat_cache = $cat_parent_cache;
   $category .= get_category_dropdown_bits($cat_id);
   $category .= "</select>\n";
@@ -1362,12 +1362,12 @@ function show_error_page($error_msg, $clickstream = "") {
   if (empty($clickstream)) {
     $clickstream = "<a href=\"".$site_sess->url(ROOT_PATH."index.php")."\">".$lang['home']."</a>".$config['category_separator'].$lang['error'];
   }
-  $site_template->register_vars(array(
+  $site_template->register_vars([
     "error_msg" => $error_msg,
     "lang_error" => $lang['error'],
     "clickstream" => $clickstream,
     "random_image" => ""
-  ));
+  ]);
   $site_template->print_template($site_template->parse_template("error"));
   exit;
 }
@@ -1377,7 +1377,7 @@ function get_mysql_version() {
   if (!empty($global_info['mysql_version'])) {
     return $global_info['mysql_version'];
   }
-  $split_info = array();
+  $split_info = [];
   if ($row = $site_db->query_firstrow("SELECT VERSION() AS version")) {
     $split_info = explode('.', $row['version']);
   }
@@ -1398,7 +1398,7 @@ function get_php_version() {
   if (!empty($global_info['php_version'])) {
     return $global_info['php_version'];
   }
-  $split_info = array();
+  $split_info = [];
   preg_match("/([0-9]{1,2})\.([0-9]{1,2})(\.([0-9]{1,2}))?/", phpversion(), $split_info);
 
   $global_info['php_version'] = 0;

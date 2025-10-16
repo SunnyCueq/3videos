@@ -26,11 +26,11 @@ if (!defined('ROOT_PATH')) {
 function init_convert_options() {
   global $config, $lang;
 
-  $convert_options = array(
+  $convert_options = [
     "convert_error" => 0,
     "convert_tool" => $config['convert_tool'],
     "convert_path" => preg_replace("/\/$/", "", $config['convert_tool_path'])
-  );
+  ];
   switch($config['convert_tool']) {
   case "im":
     $exec = check_executable("convert");
@@ -67,7 +67,7 @@ function init_convert_options() {
 function resize_image_gd($src, $dest, $quality, $width, $height, $image_info) {
   global $convert_options;
 
-  $types = array(1 => "gif", 2 => "jpeg", 3 => "png");
+  $types = [1 => "gif", 2 => "jpeg", 3 => "png"];
   if ($convert_options['convert_gd2']) {
     $thumb = imagecreatetruecolor($width, $height);
   }
@@ -107,7 +107,7 @@ function resize_image_netpbm($src, $dest, $quality, $width, $height, $image_info
   global $convert_options;
 
   $convert_path = $convert_options['convert_path'];
-  $types = array(1 => "gif", 2 => "jpeg", 3 => "png");
+  $types = [1 => "gif", 2 => "jpeg", 3 => "png"];
   $target = ($width > $height) ? $width : $height;
   $command = $convert_path."/".check_executable($types[$image_info[2]]."topnm")." ".$src." | ".$convert_path."/".check_executable("pnmscale")." --quiet -xysize ".$target." ".$target." | ";
   if ($image_info[2] == 1) {
@@ -148,7 +148,7 @@ function get_width_height($dimension, $width, $height, $resize_type = 1, $max_he
       $new_height = floor($scale*$height);
     }
   }
-  return array("width" => $new_width, "height" => $new_height);
+  return ["width" => $new_width, "height" => $new_height];
 }
 
 function create_thumbnail($src, $dest, $quality, $dimension, $resize_type) {

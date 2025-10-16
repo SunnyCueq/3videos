@@ -37,7 +37,7 @@ if (!$cat_id || !isset($cat_cache[$cat_id]) || !check_permission("auth_viewcat",
 
 $cache_id = create_cache_id(
   'page.categories',
-  array(
+  [
     $user_info[$user_table_fields['user_id']],
     $cat_id,
     $page,
@@ -45,7 +45,7 @@ $cache_id = create_cache_id(
     isset($user_info['lightbox_image_ids']) ? substr(md5($user_info['lightbox_image_ids']), 0, 8) : 0,
     $config['template_dir'],
     $config['language_dir']
-  )
+  ]
 );
 
 if (!$cache_page_categories || !$content = get_cache_file($cache_id)) {
@@ -61,7 +61,7 @@ ob_start();
 //--- SEO variables -----------------------------------
 //-----------------------------------------------------
 
-$site_template->register_vars(array('prepend_head_title' => $cat_cache[$cat_id]['cat_name'] . " - "));
+$site_template->register_vars(['prepend_head_title' => $cat_cache[$cat_id]['cat_name'] . " - "]);
 
 //-----------------------------------------------------
 //--- Show Categories ---------------------------------
@@ -76,7 +76,7 @@ else {
 }
 
 $random_cat_image = (defined("SHOW_RANDOM_IMAGE") && SHOW_RANDOM_IMAGE == 0) ? "" : get_random_image($cat_id);
-$site_template->register_vars(array(
+$site_template->register_vars([
   "categories" => get_categories($cat_id),
   "cat_name" => format_text($cat_cache[$cat_id]['cat_name'], 2),
   "cat_description" => htmlspecialchars(format_text($cat_cache[$cat_id]['cat_description'], 1, 0, 1)),
@@ -84,18 +84,18 @@ $site_template->register_vars(array(
   "upload_url" => $upload_url,
   "upload_button" => $upload_button,
   "random_cat_image" => $random_cat_image
-));
+]);
 
 unset($random_cat_image);
 
 //-----------------------------------------------------
 //--- Show Images -------------------------------------
 //-----------------------------------------------------
-$site_template->register_vars(array(
+$site_template->register_vars([
   "has_rss"   => true,
   "rss_title" => "RSS Feed: ".format_text($cat_cache[$cat_id]['cat_name'], 2)." (".str_replace(':', '', $lang['new_images']).")",
   "rss_url"   => $script_url."/rss.php?action=images&amp;".URL_CAT_ID."=".$cat_id
-));
+]);
 
 $num_rows_all = (isset($cat_cache[$cat_id]['num_images'])) ? $cat_cache[$cat_id]['num_images'] : 0;
 $link_arg = $site_sess->url(ROOT_PATH."categories.php?".URL_CAT_ID."=".$cat_id);
@@ -104,10 +104,10 @@ include(ROOT_PATH.'includes/paging.php');
 $getpaging = new Paging($page, $perpage, $num_rows_all, $link_arg);
 $offset = $getpaging->get_offset();
 
-$site_template->register_vars(array(
+$site_template->register_vars([
   "paging" => $getpaging->get_paging(),
   "paging_stats" => $getpaging->get_paging_stats()
-));
+]);
 
 $imgtable_width = ceil((intval($config['image_table_width'])) / $config['image_cells']);
 if ((substr($config['image_table_width'], -1)) == "%") {
@@ -178,10 +178,10 @@ $clickstream = "<span class=\"clickstream\"><a href=\"".$site_sess->url(ROOT_PAT
 //-----------------------------------------------------
 //--- Print Out ---------------------------------------
 //-----------------------------------------------------
-$site_template->register_vars(array(
+$site_template->register_vars([
   "msg" => $msg,
   "clickstream" => $clickstream
-));
+]);
 
 $site_template->print_template($site_template->parse_template($main_template));
 

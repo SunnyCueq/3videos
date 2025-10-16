@@ -54,12 +54,12 @@ if (!empty($template)) {
 
 $cache_id = create_cache_id(
   'page.index',
-  array(
+  [
     $user_info[$user_table_fields['user_id']],
     isset($user_info['lightbox_image_ids']) ? substr(md5($user_info['lightbox_image_ids']), 0, 8) : 0,
     $config['template_dir'],
     $config['language_dir']
-  )
+  ]
 );
 
 if (!$cache_page_index || !$content = get_cache_file($cache_id)) {
@@ -84,11 +84,11 @@ unset($categories);
 //-----------------------------------------------------
 //--- Show New Images ---------------------------------
 //-----------------------------------------------------
-$site_template->register_vars(array(
+$site_template->register_vars([
   "has_rss"   => true,
   "rss_title" => "RSS Feed: ".format_text($config['site_name'], 2)." (".str_replace(':', '', $lang['new_images']).")",
   "rss_url"   => $script_url."/rss.php?action=images"
-));
+]);
 
 $imgtable_width = ceil(intval($config['image_table_width']) / $config['image_cells']);
 if ((substr($config['image_table_width'], -1)) == "%") {
@@ -156,10 +156,10 @@ unset($new_images);
 //-----------------------------------------------------
 //--- Print Out ---------------------------------------
 //-----------------------------------------------------
-$site_template->register_vars(array(
+$site_template->register_vars([
   "msg" => $msg,
   "clickstream" => $clickstream
-));
+]);
 $site_template->print_template($site_template->parse_template($main_template));
 
 $content = ob_get_contents();

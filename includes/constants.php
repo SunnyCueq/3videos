@@ -113,7 +113,9 @@ define('ADMIN_SAFE_LOGIN', 0);
 
 // If you use GD higher 2.0.1 and PHP higher 4.0.6 set this to 1.
 // Your thumbnails will be created with better quality
-//define('CONVERT_IS_GD2', 0);
+if (!defined('CONVERT_IS_GD2')) {
+    define('CONVERT_IS_GD2', 0);
+}
 
 
 // If you have a lot of images in your database,
