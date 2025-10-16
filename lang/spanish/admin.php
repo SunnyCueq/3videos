@@ -328,7 +328,6 @@ $lang['auth_download'] = "Descargar";
 $lang['auth_upload'] = "Subir";
 $lang['auth_directupload'] = "Subir directamente";
 $lang['auth_vote'] = "Votar";
-$lang['auth_sendpostcard'] = "Enviar postal";
 $lang['auth_readcomment'] = "Leer comentarios";
 $lang['auth_postcomment'] = "Publicar comentario";
 $lang['permissions_edit_success'] = "Permisos actualizados";

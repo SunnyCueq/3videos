@@ -110,7 +110,7 @@ $captcha_enable              = 1;
 $captcha_enable_comments     = 1;
 $captcha_enable_upload       = 1;
 $captcha_enable_registration = 1;
-$captcha_enable_postcards    = 1;
+
 $captcha_ttf                 = 1;
 $captcha_path                = ROOT_PATH.'captcha';
 $captcha_chars               = "abcdefghijklmnopqrstuvwxyz123456789";
@@ -145,7 +145,7 @@ if (!$captcha_enable) {
     $captcha_enable_comments     = 0;
     $captcha_enable_upload       = 0;
     $captcha_enable_registration = 0;
-    $captcha_enable_postcards    = 0;
+
 }
 
 // Include default languages
@@ -480,7 +480,7 @@ if ($config['gz_compress'] == 1 && !isset($nozip)) {
 if (defined("GET_CACHES")) {
     $config['cat_order'] = empty($config['cat_order']) ? 'cat_order, cat_name' : $config['cat_order'];
     $config['cat_sort']  = empty($config['cat_sort']) ? 'ASC' : $config['cat_sort'];
-    $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_sendpostcard, auth_readcomment, auth_postcomment
+    $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
           FROM ".CATEGORIES_TABLE."
           ORDER BY ".$config['cat_order']." " .$config['cat_sort'];
     $result = $site_db->query($sql);

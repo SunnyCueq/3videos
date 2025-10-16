@@ -374,12 +374,7 @@ function show_image($image_row, $mode = "", $show_link = 1, $detailed_view = 0) 
     set_download_token($image_row['image_id']);
   }
 
-  if (!check_permission("auth_sendpostcard", $image_row['cat_id'])) {
-    $postcard_button = "<img src=\"".get_gallery_image("postcard_off.gif")."\" border=\"0\" alt=\"\" />";
-  }
-  else {
-    $postcard_button = "<a href=\"".$site_sess->url(ROOT_PATH."postcards.php?".URL_IMAGE_ID."=".$image_row['image_id'].((!empty($mode)) ? "&amp;mode=".$mode : ""))."\"><img src=\"".get_gallery_image("postcard.gif")."\" border=\"0\" alt=\"\" /></a>";
-  }
+  $postcard_button = "";
 
   if (!check_permission("auth_viewimage", $image_row['cat_id']) || !check_permission("auth_viewcat", $image_row['cat_id'])) {
     $show_link = 0;
@@ -429,7 +424,7 @@ function show_image($image_row, $mode = "", $show_link = 1, $detailed_view = 0) 
     "lang_comments" => $lang['comments'],
     "image_comments" => $num_comments,
     "lightbox_button" => $lightbox_button,
-    "postcard_button" => $postcard_button,
+
     "download_button" => $download_button,
     "download_zip_button" => $download_zip_button,
     "image_download_url" => $image_row['image_download_url'],

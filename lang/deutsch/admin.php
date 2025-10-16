@@ -327,7 +327,6 @@ $lang['auth_download'] = "Download";
 $lang['auth_upload'] = "Upload";
 $lang['auth_directupload'] = "Direkter Upload";
 $lang['auth_vote'] = "Bewerten";
-$lang['auth_sendpostcard'] = "Postkarten versenden";
 $lang['auth_readcomment'] = "Kommentare lesen";
 $lang['auth_postcomment'] = "Kommentare posten";
 $lang['permissions_edit_success'] = "Berechtigungen erfolgreich aktualisiert";

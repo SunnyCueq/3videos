@@ -92,7 +92,7 @@ $array = array(
     "page_index"      => false,
     "page_lightbox"   => false,
     "page_member"     => false,
-    "page_postcards"  => false,
+
     "page_register"   => false,
     "page_search"     => false,
     "page_top"        => false,
@@ -102,7 +102,7 @@ $array = array(
     "details"    => false,
     "index"      => false,
     "member"     => false,
-    "postcards"  => false,
+
     "register"   => false,
     "search"     => false,
     "top"        => false

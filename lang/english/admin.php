@@ -334,7 +334,6 @@ $lang['auth_download'] = "Download";
 $lang['auth_upload'] = "Upload";
 $lang['auth_directupload'] = "Direct Upload";
 $lang['auth_vote'] = "Vote";
-$lang['auth_sendpostcard'] = "Send eCard";
 $lang['auth_readcomment'] = "Read Comments";
 $lang['auth_postcomment'] = "Post Comment";
 $lang['permissions_edit_success'] = "Permissions Updated";

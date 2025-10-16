@@ -35,7 +35,7 @@ define('GROUPS_TABLE', $table_prefix.'groups');
 define('IMAGES_TABLE', $table_prefix.'images');
 define('IMAGES_TEMP_TABLE', $table_prefix.'images_temp');
 define('LIGHTBOXES_TABLE', $table_prefix.'lightboxes');
-define('POSTCARDS_TABLE', $table_prefix.'postcards');
+
 define('SESSIONS_TABLE', $table_prefix.'sessions');
 define('SESSIONVARS_TABLE', $table_prefix.'sessionvars');
 define('SETTINGS_TABLE', $table_prefix.'settings');
@@ -48,7 +48,7 @@ define('WORDMATCH_TABLE', $table_prefix.'wordmatch');
 define('URL_IMAGE_ID', 'image_id');
 define('URL_CAT_ID', 'cat_id');
 define('URL_USER_ID', 'user_id');
-define('URL_POSTCARD_ID', 'postcard_id');
+
 define('URL_COMMENT_ID', 'comment_id');
 define('URL_PAGE', 'page');
 define('URL_ID', 'id');
@@ -90,8 +90,7 @@ define('REPLACE_EMPTY', '&nbsp;');
 define('MAX_RATING', 5);
 
 
-// Days postcards will be held in the database
-define('POSTCARD_EXPIRY', 10);
+
 
 
 // Time offset for your website. Sometimes usefull if your server is located

@@ -37,7 +37,7 @@ $access_field_array = array(
   "auth_upload",
   "auth_directupload",
   "auth_vote",
-  "auth_sendpostcard",
+
   "auth_readcomment",
   "auth_postcomment"
 );
@@ -304,15 +304,15 @@ if ($action == "updatepermissions") {
     $auth_upload = (isset($auth[$key]['auth_upload']) && $auth[$key]['auth_upload'] == 1) ? 1 : 0;
     $auth_directupload = (isset($auth[$key]['auth_directupload']) && $auth[$key]['auth_directupload'] == 1) ? 1 : 0;
     $auth_vote = (isset($auth[$key]['auth_vote']) && $auth[$key]['auth_vote'] == 1) ? 1 : 0;
-    $auth_sendpostcard = (isset($auth[$key]['auth_sendpostcard']) && $auth[$key]['auth_sendpostcard'] == 1) ? 1 : 0;
+    
     $auth_readcomment = (isset($auth[$key]['auth_readcomment']) && $auth[$key]['auth_readcomment'] == 1) ? 1 : 0;
     $auth_postcomment = (isset($auth[$key]['auth_postcomment']) && $auth[$key]['auth_postcomment'] == 1) ? 1 : 0;
 
-    if ($auth_viewcat || $auth_viewimage || $auth_download || $auth_upload || $auth_directupload || $auth_vote || $auth_sendpostcard || $auth_readcomment || $auth_postcomment) {
+    if ($auth_viewcat || $auth_viewimage || $auth_download || $auth_upload || $auth_directupload || $auth_vote  || $auth_readcomment || $auth_postcomment) {
       $sql = "INSERT INTO ".GROUP_ACCESS_TABLE."
-              (group_id, cat_id, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_sendpostcard, auth_readcomment, auth_postcomment)
+              (group_id, cat_id, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment)
               VALUES
-              ($group_id, $key, $auth_viewcat, $auth_viewimage, $auth_download, $auth_upload, $auth_directupload, $auth_vote, $auth_sendpostcard, $auth_readcomment, $auth_postcomment)";
+              ($group_id, $key, $auth_viewcat, $auth_viewimage, $auth_download, $auth_upload, $auth_directupload, $auth_vote, $$auth_readcomment, $auth_postcomment)";
       $site_db->query($sql);
     }
   }

@@ -43,7 +43,7 @@ $access_field_array = array(
   "auth_upload" => AUTH_USER,
   "auth_directupload" => AUTH_ADMIN,
   "auth_vote" => AUTH_ALL,
-  "auth_sendpostcard" => AUTH_ALL,
+
   "auth_readcomment" => AUTH_ALL,
   "auth_postcomment" => AUTH_USER
 );
@@ -483,7 +483,7 @@ if ($action == "savecat") {
     $auth_upload = intval($HTTP_POST_VARS['auth_upload']);
     $auth_directupload = intval($HTTP_POST_VARS['auth_directupload']);
     $auth_vote = intval($HTTP_POST_VARS['auth_vote']);
-    $auth_sendpostcard = intval($HTTP_POST_VARS['auth_sendpostcard']);
+    
     $auth_readcomment = intval($HTTP_POST_VARS['auth_readcomment']);
     $auth_postcomment = intval($HTTP_POST_VARS['auth_postcomment']);
 
@@ -506,9 +506,9 @@ if ($action == "savecat") {
         }
 
         $sql = "INSERT INTO ".CATEGORIES_TABLE."
-            (cat_name, cat_description, cat_parent_id, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_sendpostcard, auth_readcomment, auth_postcomment)
+            (cat_name, cat_description, cat_parent_id, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment)
             VALUES
-            ('$cat_name', '$cat_description', $cat_parent_id, $cat_order, $auth_viewcat, $auth_viewimage, $auth_download, $auth_upload, $auth_directupload, $auth_vote, $auth_sendpostcard, $auth_readcomment, $auth_postcomment)";
+            ('$cat_name', '$cat_description', $cat_parent_id, $cat_order, $auth_viewcat, $auth_viewimage, $auth_download, $auth_upload, $auth_directupload, $auth_vote, $$auth_readcomment, $auth_postcomment)";
         $result = $site_db->query($sql);
         $cat_id = $site_db->get_insert_id();
 
@@ -559,7 +559,7 @@ if ($action == "addcat") {
     if ($cat_parent_id != 0) {
         $new_access_field_array = array();
 
-        $sql = "SELECT cat_name, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_sendpostcard, auth_readcomment, auth_postcomment
+        $sql = "SELECT cat_name, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
             FROM ".CATEGORIES_TABLE."
             WHERE cat_id = $cat_parent_id";
         $row = $site_db->query_firstrow($sql);
@@ -596,7 +596,7 @@ if ($action == "updatecat") {
     $auth_upload = intval($HTTP_POST_VARS['auth_upload']);
     $auth_directupload = intval($HTTP_POST_VARS['auth_directupload']);
     $auth_vote = intval($HTTP_POST_VARS['auth_vote']);
-    $auth_sendpostcard = intval($HTTP_POST_VARS['auth_sendpostcard']);
+    
     $auth_readcomment = intval($HTTP_POST_VARS['auth_readcomment']);
     $auth_postcomment = intval($HTTP_POST_VARS['auth_postcomment']);
 
@@ -626,7 +626,7 @@ if ($action == "updatecat") {
         }
 
         $sql = "UPDATE ".CATEGORIES_TABLE."
-            SET cat_name = '$cat_name', cat_description = '$cat_description', cat_parent_id = $cat_parent_id, cat_order = $cat_order, cat_hits = $cat_hits, auth_viewcat = $auth_viewcat, auth_viewimage = $auth_viewimage, auth_download = $auth_download, auth_upload = $auth_upload, auth_directupload = $auth_directupload, auth_vote = $auth_vote, auth_sendpostcard = $auth_sendpostcard, auth_readcomment = $auth_readcomment, auth_postcomment = $auth_postcomment
+            SET cat_name = '$cat_name', cat_description = '$cat_description', cat_parent_id = $cat_parent_id, cat_order = $cat_order, cat_hits = $cat_hits, auth_viewcat = $auth_viewcat, auth_viewimage = $auth_viewimage, auth_download = $auth_download, auth_upload = $auth_upload, auth_directupload = $auth_directupload, auth_vote = $auth_vote = $auth_readcomment = $auth_readcomment, auth_postcomment = $auth_postcomment
             WHERE cat_id = $cat_id";
         $result = $site_db->query($sql);
 
@@ -649,7 +649,7 @@ if ($action == "editcat") {
     }
     $cat_id = (isset($HTTP_POST_VARS['cat_id'])) ? intval($HTTP_POST_VARS['cat_id']) : intval($HTTP_GET_VARS['cat_id']);
 
-    $sql = "SELECT cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_sendpostcard, auth_readcomment, auth_postcomment
+    $sql = "SELECT cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
           FROM ".CATEGORIES_TABLE."
           WHERE cat_id = $cat_id";
     $cat_row = $site_db->query_firstrow($sql);
@@ -726,7 +726,7 @@ if ($action == "modifycats") {
         $GLOBALS['map'] = array();
     }
 
-    $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_sendpostcard, auth_readcomment, auth_postcomment
+    $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
           FROM ".CATEGORIES_TABLE."
           WHERE cat_parent_id = 0
           ORDER BY cat_order, cat_name ASC";
@@ -742,7 +742,7 @@ if ($action == "modifycats") {
         if (!$show_all_subcats && !$open_all) {
             $where_sql = "WHERE cat_parent_id IN (".implode(", ", $GLOBALS['map']).")";
         }
-        $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_sendpostcard, auth_readcomment, auth_postcomment
+        $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
             FROM ".CATEGORIES_TABLE."
             $where_sql
             ORDER BY cat_order, cat_name ASC";

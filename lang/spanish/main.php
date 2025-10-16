@@ -131,19 +131,13 @@ $lang['exif_focallen'] = "Longitud focal:";
 //-----------------------------------------------------
 //--- Postcards ---------------------------------------
 //-----------------------------------------------------
-$lang['send_postcard'] = "Mandar postal";
-$lang['edit_postcard'] = "Moficiar postal";
-$lang['preview_postcard'] = "Previsualizar postal";
 $lang['bg_color'] = "Color de dondo:";
 $lang['border_color'] = "Color del borde:";
 $lang['font_color'] = "Color del tipo de letra:";
 $lang['font_face'] = "Tipo de letra:";
 $lang['recipient'] = "Destinatario";
 $lang['sender'] = "Remitente";
-$lang['send_postcard_emailsubject'] = "¡Has recibido una tarjeta postal para tí!";
-$lang['send_postcard_success'] = "¡Muchas gracias! ¡Tu postal ha sido enviada!";
 $lang['back_to_gallery'] = "Volver a la galería";
-$lang['invalid_postcard_id'] = "Identificador de postal no válido.";
 
 //-----------------------------------------------------
 //--- Top Images --------------------------------------

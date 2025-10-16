@@ -131,19 +131,13 @@ $lang['exif_focallen'] = "Brennweite:";
 //-----------------------------------------------------
 //--- Postcards ---------------------------------------
 //-----------------------------------------------------
-$lang['send_postcard'] = "eCard versenden";
-$lang['edit_postcard'] = "eCard bearbeiten";
-$lang['preview_postcard'] = "eCard Vorschau";
 $lang['bg_color'] = "Hintergrundfarbe:";
 $lang['border_color'] = "Randfarbe:";
 $lang['font_color'] = "Schriftfarbe:";
 $lang['font_face'] = "Schriftart:";
 $lang['recipient'] = "Empfänger";
 $lang['sender'] = "Absender";
-$lang['send_postcard_emailsubject'] = "Eine Postkarte für Sie!";
-$lang['send_postcard_success'] = "Vielen Dank! Ihre eCard wurde erfolgreich versendet.";
 $lang['back_to_gallery'] = "Zurück zur Galerie";
-$lang['invalid_postcard_id'] = "Es existiert keine Postkarte mit dieser ID.";
 
 //-----------------------------------------------------
 //--- Top Images --------------------------------------

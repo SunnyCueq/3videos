@@ -87,7 +87,7 @@ function get_permission() {
             WHERE groupmatch_enddate <= $current_time AND groupmatch_enddate <> 0";
     $site_db->query($sql);
     */
-    $sql = "SELECT a.cat_id, a.auth_viewcat, a.auth_viewimage, a.auth_download, a.auth_upload, a.auth_directupload, a.auth_vote, a.auth_sendpostcard, a.auth_readcomment, a.auth_postcomment
+    $sql = "SELECT a.cat_id, a.auth_viewcat, a.auth_viewimage, a.auth_download, a.auth_upload, a.auth_directupload, a.auth_vote, a.auth_readcomment, a.auth_postcomment
             FROM (".GROUP_ACCESS_TABLE." a, ".GROUP_MATCH_TABLE." m)
             WHERE m.user_id = ".$user_info['user_id']."
             AND a.group_id = m.group_id
