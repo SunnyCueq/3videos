@@ -25,23 +25,23 @@ if (!defined('ROOT_PATH')) {
 
 class Email {
 
-  var $auth_type = "LOGIN"; // Default: "LOGIN". Set to "PLAIN" if required.
-  var $no_error = 0;
-  var $use_smtp;
-  var $smtp_auth;
-  var $to;
-  var $subject;
-  var $body;
-  var $bcc = array();
-  var $from = "";
-  var $from_email = "";
-  var $word_wrap = 76;
-  var $template_extension = "html";
-  var $start = "{";
-  var $end = "}";
-  var $key_cache = array();
-  var $val_cache = array();
-  var $crlf = "\r\n";
+  public string $auth_type = "LOGIN"; // Default: "LOGIN". Set to "PLAIN" if required.
+  public int $no_error = 0;
+  public int $use_smtp;
+  public int $smtp_auth;
+  public string $to;
+  public string $subject;
+  public string $body;
+  public array $bcc = [];
+  public string $from = "";
+  public string $from_email = "";
+  public int $word_wrap = 76;
+  public string $template_extension = "html";
+  public string $start = "{";
+  public string $end = "}";
+  public array $key_cache = [];
+  public array $val_cache = [];
+  public string $crlf = "\r\n";
 
   function __construct() {
     global $config;

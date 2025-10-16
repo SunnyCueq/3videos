@@ -24,13 +24,13 @@ if (!defined('ROOT_PATH')) {
 }
 
 class Db {
-  var $no_error = 0;
-  var $connection;
-  var $query_id = 0;
-  var $query_count = 0;
-  var $query_time = 0;
-  var $query_array = array();
-  var $table_fields = array();
+  public int $no_error = 0;
+  public $connection;
+  public $query_id = 0;
+  public int $query_count = 0;
+  public float $query_time = 0;
+  public array $query_array = [];
+  public array $table_fields = [];
 
   function __construct($db_host, $db_user, $db_password = "", $db_name = "", $db_pconnect = 0) {
     if (!$this->connection = @mysqli_connect($db_host, $db_user, $db_password, $db_name)) {

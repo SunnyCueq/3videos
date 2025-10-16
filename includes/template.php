@@ -25,14 +25,14 @@ if (!defined('ROOT_PATH')) {
 
 class Template
 {
-    public $no_error = 0;
-    public $val_cache = array();
-    public $missing_val_cache = array();
-    public $template_cache = array();
-    public $template_path;
-    public $template_extension = "html";
-    public $start = "{";
-    public $end = "}";
+    public int $no_error = 0;
+    public array $val_cache = [];
+    public array $missing_val_cache = [];
+    public array $template_cache = [];
+    public string $template_path;
+    public string $template_extension = "html";
+    public string $start = "{";
+    public string $end = "}";
 
     public function __construct($template_path = "")
     {

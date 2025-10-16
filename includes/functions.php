@@ -33,7 +33,7 @@ function set_download_token($token) {
   $download_token = @unserialize($site_sess->get_session_var('download_token'));
 
   if (!$download_token) {
-    $download_token = array();
+    $download_token = [];
   }
 
   $download_token[md5($token)] = 1;
@@ -219,8 +219,8 @@ function safe_htmlspecialchars($chars) {
 
 function un_htmlspecialchars($text) {
   $text = str_replace(
-    array('&lt;', '&gt;', '&quot;', '&amp;'),
-    array('<',    '>',    '"',      '&'),
+    ['&lt;', '&gt;', '&quot;', '&amp;'],
+    ['<',    '>',    '"',      '&'],
     $text
   );
 
@@ -228,7 +228,7 @@ function un_htmlspecialchars($text) {
 }
 
 function get_iptc_info($info) {
-  $iptc_match = array();
+  $iptc_match = [];
   $iptc_match['2#120'] = "caption";
   $iptc_match['2#122'] = "caption_writer";
   $iptc_match['2#105'] = "headline";
@@ -249,7 +249,7 @@ function get_iptc_info($info) {
   $iptc_match['2#116'] = "copyright_notice";
 
   $iptc = iptcparse($info);
-  $iptc_array = array();
+  $iptc_array = [];
   if (is_array($iptc)) {
     foreach ($iptc as $key => $val) {
       if (isset($iptc_match[$key])) {
@@ -270,7 +270,7 @@ function get_iptc_info($info) {
 }
 
 function get_exif_info($exif) {
-  $exif_match = array();
+  $exif_match = [];
   $exif_match['Make'] = "make";
   $exif_match['Model'] = "model";
   $exif_match['DateTimeOriginal'] = "datetime";
@@ -279,7 +279,7 @@ function get_exif_info($exif) {
   $exif_match['FNumber'] = "aperture";
   $exif_match['FocalLength'] = "focallen";
 
-  $exif_array = array();
+  $exif_array = [];
   if (is_array($exif)) {
     foreach ($exif as $key => $val) {
       if (isset($exif_match[$key])) {
@@ -439,7 +439,7 @@ function show_image($image_row, $mode = "", $show_link = 1, $detailed_view = 0) 
   ));
 
   if (!empty($additional_image_fields)) {
-    $additional_field_array = array();
+    $additional_field_array = [];
     foreach ($additional_image_fields as $key => $val) {
       $additional_field_array[$key] = (!empty($image_row[$key])) ? format_text($image_row[$key], 1) : REPLACE_EMPTY;
       $additional_field_array['lang_'.$key] = $val[0];
@@ -455,9 +455,9 @@ function show_image($image_row, $mode = "", $show_link = 1, $detailed_view = 0) 
     $rate_form = $site_template->parse_template("rate_form");
   }
   $site_template->register_vars("rate_form", $rate_form);
-  $site_template->register_vars(array(
+  $site_template->register_vars([
     "image" => get_media_code($image_row['image_media_file'], $image_row['image_id'], $image_row['cat_id'], $image_row['image_name'], $mode, $show_link, $detailed_view),
-  ));
+  ]);
   return true;
 }
 
@@ -565,7 +565,7 @@ function get_media_code($media_file_name, $image_id = 0, $cat_id = 0, $image_nam
 function get_random_image_cache() {
   global $site_db, $cat_cache, $total_images;
 
-  $random_image_cache = array();
+  $random_image_cache = [];
   $cat_id_sql = get_auth_cat_sql("auth_viewcat", "NOTIN");
 
   if (SHOW_RANDOM_CAT_IMAGE) {

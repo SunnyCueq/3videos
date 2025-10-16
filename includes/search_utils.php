@@ -24,11 +24,11 @@ if (!defined('ROOT_PATH')) {
 }
 
 if (!isset($search_match_fields) || !$search_match_fields) {
-  $search_match_fields = array(
+  $search_match_fields = [
     "image_name"        => "name_match",
     "image_description" => "desc_match",
     "image_keywords"    => "keys_match",
-  );
+  ];
 }
 
 if (!isset($search_index_types) || !$search_index_types) {
@@ -41,17 +41,17 @@ if (!isset($search_index_types) || !$search_index_types) {
    *
    * Note that max. length of the words is 50 chars. This means that MAX_SEARCH_KEYWORD_LENGTH cannot exceed 50 chars (default is 25).
    */
-  $search_index_types = array(
+  $search_index_types = [
     "image_name"        => "fulltext",
     "image_description" => "fulltext",
     "image_keywords"    => "keywords",
-  );
+  ];
 }
 
 function convert_special($text) {
   return strtr(
     $text,
-    array(
+    [
       "Ä" => "AE",
       "Ö" => "OE",
       "Ü" => "UE",
@@ -59,7 +59,7 @@ function convert_special($text) {
       "ö" => "oe",
       "ü" => "ue",
       "ß" => "ss"
-    )
+    ]
   );
 }
 
@@ -73,19 +73,19 @@ function clean_search_word($val) {
 }
 
 function normalize_search_word($val) {
-  $search_array = array(
+  $search_array = [
     "/&(?!(#[0-9]+|[a-z]+);)/si",
     "#([^]_a-z0-9-=\"'\/])([a-z]+?)://([^, \(\)<>\n\r]+)#si",
     "#([^]_a-z0-9-=\"'\/])www\.([a-z0-9\-]+)\.([a-z0-9\-.\~]+)((?:/[^, \(\)<>\n\r]*)?)#si",
     "#[-_'`´\^\$\(\)<>\"\|,@\?%~\+\.\[\]{}:\/=!§\\\\]+#s"
-  );
+  ];
 
-  $replace_array = array(
+  $replace_array = [
     " ",
     " ",
     " ",
     ""
-  );
+  ];
 
   $val = preg_replace($search_array, $replace_array, $val);
 
@@ -99,7 +99,7 @@ function prepare_searchwords_for_search($val)
 
     $stopword_list = get_stopwords();
 
-    $tokens = array();
+    $tokens = [];
     $modifier = null;
     for ($nextToken = strtok($val, ' '); $nextToken !== false; $nextToken = strtok(' ')) {
       if ($nextToken[0] == '"') {
@@ -133,7 +133,7 @@ function prepare_searchwords_for_search($val)
             $normalized = normalize_search_word($nextToken);
 
             if (trim($normalized) != '' && $normalized != $nextToken) {
-              $nextToken = array($nextToken, $normalized);
+              $nextToken = [$nextToken, $normalized];
             }
 
             $tokens[] = $nextToken;
@@ -159,7 +159,7 @@ function prepare_searchwords($val, $for_search = false)
     $val = str_replace("*", "", $val);
 
     if (empty($val)) {
-      return array();
+      return [];
     }
 
     $split_words = preg_split("/\s+/", $val);
@@ -170,7 +170,7 @@ function prepare_searchwords($val, $for_search = false)
   }
 
   $stopword_list = get_stopwords();
-  $clean_words = array();
+  $clean_words = [];
 
   foreach ($split_words as $word) {
     $word = trim($word);
@@ -191,7 +191,7 @@ function prepare_searchwords($val, $for_search = false)
   return $clean_words;
 }
 
-function add_searchwords($image_id = 0, $raw_words = array()) {
+function add_searchwords($image_id = 0, $raw_words = []) {
   global $site_db, $search_match_fields, $search_index_types;
 
   if (!$image_id || empty($raw_words)) {
@@ -200,7 +200,7 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
 
   $match_table_fields = $site_db->get_table_fields(WORDMATCH_TABLE);
 
-  $clean_words = array();
+  $clean_words = [];
   $allwords_sql = "";
 
   foreach ($raw_words as $key => $val) {
@@ -215,7 +215,7 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
         if (is_array($val)) {
           $val = implode(' ', $val);
         }
-        $split_words = prepare_searchwords(array($val));
+        $split_words = prepare_searchwords([$val]);
         break;
       case 'keywords':
         if (!is_array($val)) {
@@ -236,7 +236,7 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
       continue;
     }
 
-    $word_cache = array();
+    $word_cache = [];
     foreach ($split_words as $word) {
       $word_cache[$word] = 1;
       $allwords_sql .= ($allwords_sql != "") ? ", '".addslashes($word)."'" : "'".addslashes($word)."'";
@@ -246,7 +246,7 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
     }
   }
 
-  $word_exists = array();
+  $word_exists = [];
   if ($allwords_sql != "") {
     $sql = "SELECT word_text, word_id
             FROM ".WORDLIST_TABLE."
@@ -259,8 +259,8 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
     $site_db->free_result();
   }
 
-  $word_done = array();
-  $new_words = array();
+  $word_done = [];
+  $new_words = [];
   $word_insert_sql = "";
   foreach ($clean_words as $key => $val) {
     if (!is_array($val)) continue;
@@ -280,7 +280,7 @@ function add_searchwords($image_id = 0, $raw_words = array()) {
           $word_insert_sql .= ")";
         }
         else {
-          $new_words[$key2] = array();
+          $new_words[$key2] = [];
           if (is_array($search_match_fields)) {
             foreach ($search_match_fields as $key3 => $val3) {
               $match = (isset($clean_words[$key3][$key2])) ? 1 : 0;
@@ -390,7 +390,7 @@ function get_stopwords() {
   global $config, $stopwords;
   if (empty($stopwords)) {
     $stopword_list = @file(ROOT_PATH."lang/".$config['language_dir']."/search_stopterms.txt", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $stopwords = array();
+    $stopwords = [];
     if (!empty($stopword_list) && is_array($stopword_list)) {
       foreach ($stopword_list as $word) {
         $stopwords[] = trim($word);

@@ -29,7 +29,7 @@ if (!defined('ROOT_PATH')) {
 
 define('SESSION_NAME', 'sessionid');
 
-$user_table_fields = array(
+$user_table_fields = [
   "user_id" => "user_id",
   "user_level" => "user_level",
   "user_name" => "user_name",
@@ -46,7 +46,7 @@ $user_table_fields = array(
   "user_comments" => "user_comments",
   "user_homepage" => "user_homepage",
   "user_icq" => "user_icq"
-);
+];
 
 //-----------------------------------------------------
 //--- End Configuration -------------------------------
@@ -67,8 +67,8 @@ class Session
     public $current_time;
     public $session_timeout;
     public $mode = "get";
-    public $session_info = array();
-    public $user_info = array();
+    public array $session_info = [];
+    public array $user_info = [];
 
     public function __construct()
     {
@@ -216,7 +216,7 @@ class Session
         $this->set_cookie_data("userpass", "", 0);
         $this->set_cookie_data("userid", GUEST);
 
-        $this->session_info = array();
+        $this->session_info = [];
 
         return true;
     }
@@ -274,12 +274,12 @@ class Session
     {
         // Use modern $_SESSION superglobal
         if (!isset($_SESSION[$this->session_key])) {
-            $_SESSION[$this->session_key] = array();
+            $_SESSION[$this->session_key] = [];
         }
         $this->session_info = &$_SESSION[$this->session_key];
 
         if (!isset($this->session_info['session_ip'])) {
-            $this->session_info = array();
+            $this->session_info = [];
             return false;
         }
 
@@ -288,7 +288,7 @@ class Session
                 @session_regenerate_id();
             }
             $this->get_session_id();
-            $this->session_info = array();
+            $this->session_info = [];
             return false;
         }
 
@@ -322,7 +322,7 @@ class Session
             }
         }
         if (empty($user_info[$user_table_fields['user_id']])) {
-            $user_info = array();
+            $user_info = [];
             $user_info['user_id'] = GUEST;
             $user_info['user_level'] = GUEST;
             $user_info['user_lastaction'] = $this->current_time;
@@ -421,8 +421,8 @@ $num_invisible_online = 0;
 $num_registered_online = 0;
 $num_guests_online = 0;
 $user_online_list = "";
-$prev_user_ids = array();
-$prev_session_ips = array();
+$prev_user_ids = [];
+$prev_session_ips = [];
 
 if (defined("GET_USER_ONLINE") && ($config['display_whosonline'] == 1 || $user_info['user_level'] == ADMIN)) {
     $time_out = time() - 300;
@@ -457,15 +457,15 @@ if (defined("GET_USER_ONLINE") && ($config['display_whosonline'] == 1 || $user_i
     $num_total_online = $num_registered_online + $num_guests_online;
     //$num_invisible_online = $num_registered_online - $num_visible_online;
 
-    $site_template->register_vars(array(
+    $site_template->register_vars([
     "num_total_online" => $num_total_online,
     "num_invisible_online" => $num_invisible_online,
     "num_registered_online" => $num_registered_online,
     "num_guests_online" => $num_guests_online,
     "user_online_list" => $user_online_list,
     "lang_user_online" => str_replace('{num_total_online}', $num_total_online, $lang['user_online']),
-    "lang_user_online_detail" => str_replace(array('{num_registered_online}','{num_invisible_online}','{num_guests_online}'), array($num_registered_online,$num_invisible_online,$num_guests_online), $lang['user_online_detail']),
-  ));
+    "lang_user_online_detail" => str_replace(['{num_registered_online}','{num_invisible_online}','{num_guests_online}'], [$num_registered_online,$num_invisible_online,$num_guests_online], $lang['user_online_detail']),
+  ]);
     $whos_online = $site_template->parse_template("whos_online");
     $site_template->register_vars("whos_online", $whos_online);
     unset($whos_online);
