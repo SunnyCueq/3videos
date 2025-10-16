@@ -20,7 +20,7 @@
  *                                                                        *
  *************************************************************************/
 if (!defined('ROOT_PATH')) {
-  die("Security violation");
+  throw new RuntimeException('Security violation: ROOT_PATH not defined');
 }
 
 function set_download_token($token) {
@@ -36,7 +36,7 @@ function set_download_token($token) {
     $download_token = [];
   }
 
-  $download_token[md5($token)] = 1;
+  $download_token[hash('sha256', $token)] = 1;
 
   $site_sess->set_session_var('download_token', serialize($download_token));
 }
@@ -54,7 +54,7 @@ function clear_download_token($token) {
     return;
   }
 
-  $token = md5($token);
+  $token = hash('sha256', $token);
 
   if (isset($download_token[$token])) {
     unset($download_token[$token]);
@@ -71,7 +71,7 @@ function check_download_token($token) {
 
   $download_token = @unserialize($site_sess->get_session_var('download_token'));
 
-  if (isset($download_token[md5($token)])) {
+  if (isset($download_token[hash('sha256', $token)])) {
     return true;
   }
 
@@ -672,22 +672,28 @@ function update_comment_count($image_id = 0, $user_id = 0) {
   if ($image_id) {
     $sql = "SELECT COUNT(comment_id) AS comments
             FROM ".COMMENTS_TABLE."
-            WHERE image_id = $image_id";
-    $countcomments = $site_db->query_firstrow($sql);
+            WHERE image_id = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$image_id]);
+    $countcomments = $stmt->fetch(PDO::FETCH_ASSOC);
     $sql = "UPDATE ".IMAGES_TABLE."
-            SET image_comments = ".$countcomments['comments']."
-            WHERE image_id = $image_id";
-    $site_db->query($sql);
+            SET image_comments = ?
+            WHERE image_id = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$countcomments['comments'], $image_id]);
   }
   if ($user_id != GUEST && $user_id && !empty($user_table_fields['user_comments'])) {
     $sql = "SELECT COUNT(comment_id) AS comments
             FROM ".COMMENTS_TABLE."
-            WHERE user_id = $user_id";
-    $countcomments = $site_db->query_firstrow($sql);
+            WHERE user_id = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$user_id]);
+    $countcomments = $stmt->fetch(PDO::FETCH_ASSOC);
     $sql = "UPDATE ".USERS_TABLE."
-            SET ".get_user_table_field("", "user_comments")." = ".$countcomments['comments']."
-            WHERE ".get_user_table_field("", "user_id")." = $user_id";
-    $site_db->query($sql);
+            SET ".get_user_table_field("", "user_comments")." = ?
+            WHERE ".get_user_table_field("", "user_id")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$countcomments['comments'], $user_id]);
   }
 }
 
@@ -695,22 +701,25 @@ function update_image_rating($image_id, $rating) {
   global $site_db;
   $sql = "SELECT cat_id, image_votes, image_rating
           FROM ".IMAGES_TABLE."
-          WHERE image_id = $image_id";
-  $image_row = $site_db->query_firstrow($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$image_id]);
+  $image_row = $stmt->fetch(PDO::FETCH_ASSOC);
   if (check_permission("auth_vote", $image_row['cat_id'])) {
     $old_votes = $image_row['image_votes'];
     $old_rating = $image_row['image_rating'];
     $new_rating = (($old_rating * $old_votes) + $rating) / ($old_votes + 1);
     $new_rating = sprintf("%.2f", $new_rating);
     $sql = "UPDATE ".IMAGES_TABLE."
-            SET image_votes = ($old_votes + 1), image_rating = '$new_rating'
-            WHERE image_id = $image_id";
-    $site_db->query($sql);
+            SET image_votes = ?, image_rating = ?
+            WHERE image_id = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$old_votes + 1, $new_rating, $image_id]);
   }
 }
 
 function check_email($email) {
-  return (preg_match('/^[-!#$%&\'*+\\.\/0-9=?A-Z^_`{|}~]+@([-0-9A-Z]+\.)+([0-9A-Z]){2,}$/i', $email)) ? 1 : 0;
+  return filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? 1 : 0;
 }
 
 function format_date($format, $timestamp) {

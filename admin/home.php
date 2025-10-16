@@ -24,7 +24,11 @@ $stats_limit = 5;
 
 define('IN_CP', 1);
 define('ROOT_PATH', './../');
-require('admin_global.php');
+$admin_global_path = realpath(dirname(__FILE__) . '/admin_global.php');
+if ($admin_global_path === false || !file_exists($admin_global_path)) {
+  die('Security Error: Invalid file path');
+}
+require($admin_global_path);
 
 if ($action == "") {
   $action = "home";

@@ -20,7 +20,7 @@
  *                                                                        *
  *************************************************************************/
 if (!defined('ROOT_PATH')) {
-    die("Security violation");
+    throw new RuntimeException('Security violation: ROOT_PATH not defined');
 }
 
 //-----------------------------------------------------
@@ -99,7 +99,15 @@ class Session
     {
         $cookie_expire = ($permanent) ? $this->current_time + 60 * 60 * 24 * 365 : 0;
         $cookie_name = COOKIE_NAME.$name;
-        setcookie($cookie_name, $value, $cookie_expire, COOKIE_PATH, COOKIE_DOMAIN, COOKIE_SECURE);
+        $options = [
+            'expires' => $cookie_expire,
+            'path' => COOKIE_PATH,
+            'domain' => COOKIE_DOMAIN,
+            'secure' => (bool)COOKIE_SECURE,
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ];
+        setcookie($cookie_name, $value, $options);
         $_COOKIE[$cookie_name] = $value;
     }
 
@@ -145,8 +153,8 @@ class Session
 
         $this->user_info = $this->load_user_info($user_id);
         if ($this->user_info['user_id'] != GUEST && !$login_process) {
-            if (secure_compare($this->read_cookie_data("userpass"), md5($this->user_info['user_password'])) && $this->user_info['user_level'] > USER_AWAITING) {
-                $this->set_cookie_data("userpass", md5($this->user_info['user_password']));
+            if (hash_equals($this->read_cookie_data("userpass") ?? '', hash('sha256', $this->user_info['user_password'])) && $this->user_info['user_level'] > USER_AWAITING) {
+                $this->set_cookie_data("userpass", hash('sha256', $this->user_info['user_password']));
             } else {
                 $this->set_cookie_data("userpass", "", 0);
                 $this->user_info = $this->load_user_info(GUEST);
@@ -154,10 +162,8 @@ class Session
         }
 
         //if (!$login_process) {
-        $sql = "REPLACE INTO ".SESSIONS_TABLE."
-              (session_id, session_user_id, session_lastaction, session_location, session_ip)
-              VALUES
-              ('".addslashes($this->session_id)."', ".$this->user_info['user_id'].", $this->current_time, '$this->user_location', '$this->user_ip')";
+        $stmt = $site_db->prepare($sql);
+        $stmt->execute([$this->session_id, $this->user_info['user_id'], $this->current_time, $this->user_location, $this->user_ip]);
         $site_db->query($sql);
         //}
 
@@ -169,9 +175,10 @@ class Session
         if ($this->user_info['user_id'] != GUEST) {
             $this->user_info['user_lastvisit'] = (!empty($this->user_info['user_lastaction'])) ? $this->user_info['user_lastaction'] : $this->current_time;
             $sql = "UPDATE ".USERS_TABLE."
-              SET ".get_user_table_field("", "user_lastaction")." = $this->current_time, ".get_user_table_field("", "user_location")." = '$this->user_location', ".get_user_table_field("", "user_lastvisit")." = ".$this->user_info['user_lastvisit']."
-              WHERE ".get_user_table_field("", "user_id")." = ".$this->user_info['user_id'];
-            $site_db->query($sql);
+              SET ".get_user_table_field("", "user_lastaction")." = ?, ".get_user_table_field("", "user_location")." = ?, ".get_user_table_field("", "user_lastvisit")." = ?
+              WHERE ".get_user_table_field("", "user_id")." = ?";
+            $stmt = $site_db->prepare($sql);
+            $stmt->execute([$this->current_time, $this->user_location, $this->user_info['user_lastvisit'], $this->user_info['user_id']]);
         }
         $this->set_cookie_data("lastvisit", $this->user_info['user_lastvisit']);
         $this->set_cookie_data("userid", $this->user_info['user_id']);
@@ -187,18 +194,21 @@ class Session
         }
         $sql = "SELECT ".get_user_table_field("", "user_id").get_user_table_field(", ", "user_password")."
             FROM ".USERS_TABLE."
-            WHERE ".get_user_table_field("", "user_name")." = '$user_name' AND ".get_user_table_field("", "user_level")." <> ".USER_AWAITING;
-        $row = $site_db->query_firstrow($sql);
+            WHERE ".get_user_table_field("", "user_name")." = ? AND ".get_user_table_field("", "user_level")." <> ?";
+        $stmt = $site_db->prepare($sql);
+        $stmt->execute([$user_name, USER_AWAITING]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         $user_id = (isset($row[$user_table_fields['user_id']])) ? $row[$user_table_fields['user_id']] : GUEST;
         if ($user_id != GUEST) {
             if (compare_passwords($user_password, $row[$user_table_fields['user_password']])) {
                 $sql = "UPDATE ".SESSIONS_TABLE."
-                SET session_user_id = $user_id
-                WHERE session_id = '".addslashes($this->session_id)."'";
-                $site_db->query($sql);
+                SET session_user_id = ?
+                WHERE session_id = ?";
+                $stmt = $site_db->prepare($sql);
+                $stmt->execute([$user_id, $this->session_id]);
                 if ($set_auto_login) {
-                    $this->set_cookie_data("userpass", ($auto_login) ? md5($row[$user_table_fields['user_password']]) : "");
+                    $this->set_cookie_data("userpass", ($auto_login) ? hash('sha256', $row[$user_table_fields['user_password']]) : "");
                 }
                 $this->start_session($user_id, 1);
                 return true;
@@ -211,8 +221,9 @@ class Session
     {
         global $site_db;
         $sql = "DELETE FROM ".SESSIONS_TABLE."
-            WHERE session_id = '".addslashes($this->session_id)."' OR session_user_id = $user_id";
-        $site_db->query($sql);
+            WHERE session_id = ? OR session_user_id = ?";
+        $stmt = $site_db->prepare($sql);
+        $stmt->execute([$this->session_id, $user_id]);
         $this->set_cookie_data("userpass", "", 0);
         $this->set_cookie_data("userid", GUEST);
 
@@ -226,8 +237,9 @@ class Session
         global $site_db;
         $expiry_time = $this->current_time - $this->session_timeout;
         $sql = "DELETE FROM ".SESSIONS_TABLE."
-            WHERE session_lastaction < $expiry_time";
-        $site_db->query($sql);
+            WHERE session_lastaction < ?";
+        $stmt = $site_db->prepare($sql);
+        $stmt->execute([$expiry_time]);
 
         return true;
     }
@@ -239,8 +251,9 @@ class Session
         $sql = "REPLACE INTO ".SESSIONS_TABLE."
            (session_id, session_user_id, session_lastaction, session_location, session_ip)
            VALUES
-           ('".addslashes($this->session_id)."', ".$this->user_info['user_id'].", $this->current_time, '$this->user_location', '$this->user_ip')";
-        $site_db->query($sql);
+           (?, ?, ?, ?, ?)";
+        $stmt = $site_db->prepare($sql);
+        $stmt->execute([$this->session_id, $this->user_info['user_id'], $this->current_time, $this->user_location, $this->user_ip]);
 
         $this->session_info['session_lastaction'] = $this->current_time;
         $this->session_info['session_location'] = $this->user_location;
@@ -248,9 +261,10 @@ class Session
 
         if ($this->user_info['user_id'] != GUEST) {
             $sql = "UPDATE ".USERS_TABLE."
-              SET ".get_user_table_field("", "user_lastaction")." = $this->current_time, ".get_user_table_field("", "user_location")." = '$this->user_location'
-              WHERE ".get_user_table_field("", "user_id")." = ".$this->user_info['user_id'];
-            $site_db->query($sql);
+              SET ".get_user_table_field("", "user_lastaction")." = ?, ".get_user_table_field("", "user_location")." = ?
+              WHERE ".get_user_table_field("", "user_id")." = ?";
+            $stmt = $site_db->prepare($sql);
+            $stmt->execute([$this->current_time, $this->user_location, $this->user_info['user_id']]);
         }
         return;
     }

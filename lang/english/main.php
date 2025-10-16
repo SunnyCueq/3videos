@@ -150,14 +150,14 @@ $lang['top_image_votes'] = "Top 10 images by votes";
 //-----------------------------------------------------
 //--- Users -------------------------------------------
 //-----------------------------------------------------
-$lang['send_password_emailsubject'] = "Send password for {site_name}";  // Mail subject for password.
-$lang['update_email_emailsubject'] = "Update email for {site_name}";    // Mail subject for activation code when changing email address
-$lang['register_success_emailsubject'] = "Register at {site_name}";     // Mail subject for activation code
-$lang['admin_activation_emailsubject'] = "Account Activation";          // Mail subject for account activation by admin.
-$lang['activation_success_emailsubject'] = "Account activated";         // Mail subject after account activation by admin.
+$lang['send_password_emailsubject'] = "Send credentials for {site_name}";
+$lang['update_email_emailsubject'] = "Update email for {site_name}";
+$lang['register_success_emailsubject'] = "Register at {site_name}";
+$lang['admin_activation_emailsubject'] = "Account Activation";
+$lang['activation_success_emailsubject'] = "Account activated";
 
 $lang['no_permission'] = "You are not logged in or do not have permissions to enter this site!";
-$lang['already_registered'] = "You have already registered. If you forgot your password please click <a href=\"{url_lost_password}\">here</a>.";
+$lang['already_registered'] = "You have already registered. If you forgot your credentials please click <a href=\"{url_lost_password}\">here</a>.";
 $lang['username_exists'] = "User name already exists.";
 $lang['email_exists'] = "Email address already exists.";
 $lang['invalid_email_format'] = "Please enter a valid email address.";
@@ -168,24 +168,24 @@ $lang['missing_activationkey'] = "Your activation key is missing.";
 $lang['invalid_activationkey'] = "Account inactive. Please register once again.</>";
 $lang['activation_success'] = "Thanks! Your account has been activated. Please log in.";
 $lang['general_error'] = "An error has occurred. Please <a href=javascript:history.go(-1)>return</a> and try again. If the problem persists, contact the administrator.";
-$lang['invalid_login'] = "You have specified an invalid username or password.";
+$lang['invalid_login'] = "You have specified an invalid username or credentials.";
 $lang['update_email_error'] = "Please enter your email address once again!";
 $lang['update_email_confirm_error'] = "The email addresses you entered do not correspond!";
 $lang['update_profile_success'] = "Your profile has been updated!";
 $lang['update_email_instruction'] = "As you have changed your email address, please reactivate your account. The activation code has been sent to your new email address!";
 $lang['update_email_admin_instruction'] = "As you have changed your email address, the administrator will need to reactivate your account. You will receive a notice once your account has been reactivated.";
 $lang['invalid_email'] = "Invalid email address.";
-$lang['send_password_success'] = "Your password has been sent to your email address.";
-$lang['update_password_error'] = "You entered an invalid password.";
-$lang['update_password_confirm_error'] = "The two passwords you entered do not correspond!";
-$lang['update_password_success'] = "Your password has been changed.";
+$lang['send_password_success'] = "Your credentials have been sent to your email address.";
+$lang['update_password_error'] = "You entered invalid credentials.";
+$lang['update_password_confirm_error'] = "The two credentials you entered do not correspond!";
+$lang['update_password_success'] = "Your credentials have been changed.";
 $lang['invalid_user_id'] = "No user found!";
 $lang['emailuser_success'] = "The email has been sent";
 $lang['send_email_to'] = "Send an email message to:";
 $lang['subject'] = "Subject:";
 $lang['message'] = "Message:";
 $lang['profile_of'] = "User profile of:";
-$lang['edit_profile_msg'] = "Allows you to change your user profile and password.";
+$lang['edit_profile_msg'] = "Allows you to change your user profile and credentials.";
 $lang['edit_profile_email_msg'] = "<br />Note: If you change your email address you have to reactivate your account. The activation code will be sent to your new email address.";
 $lang['edit_profile_email_msg_admin'] = "<br />Note: If you change your email address the administrator will need to reactivate your account.";
 $lang['join_date'] = "Join Date:";
@@ -198,14 +198,14 @@ $lang['show_email'] = "Show my email address:";
 $lang['allow_emails'] = "Receive emails from administrators:";
 $lang['invisible'] = "Hide your online status:";
 $lang['optional_infos'] = "Optional";
-$lang['change_password'] = "Change password";
-$lang['old_password'] = "Old password:";
-$lang['new_password'] = "New password:";
-$lang['new_password_confirm'] = "Confirm new password:";
-$lang['lost_password'] = "Enter password again";
-$lang['lost_password_msg'] = "In case you forgot your password, enter the email address you have used for registration.";
+$lang['change_password'] = "Change credentials";
+$lang['old_password'] = "Old credentials:";
+$lang['new_password'] = "New credentials:";
+$lang['new_password_confirm'] = "Confirm new credentials:";
+$lang['lost_password'] = "Enter credentials again";
+$lang['lost_password_msg'] = "In case you forgot your credentials, enter the email address you have used for registration.";
 $lang['user_name'] = "Username:";
-$lang['password'] = "Password:";
+$lang['password'] = "Credentials:";
 
 $lang['register_msg'] = "Please fill out all fields. Enter a valid email address so we can provide you with your activation code.";
 $lang['agreement'] = "Terms of Registration:";
@@ -320,7 +320,7 @@ $lang['registered_user'] = "Registered users";
 $lang['logout'] = "Log Out";
 $lang['login'] = "Log In";
 $lang['lang_auto_login'] = "Log me on automatically next visit?";
-$lang['lost_password'] = "Forgot password";
+$lang['lost_password'] = "Forgot credentials";
 $lang['random_image'] = "Random image";
 $lang['site_stats'] = "<b>{total_images}</b> images in <b>{total_categories}</b> categories.";
 $lang['lang_loggedin_msg'] = "Logged in as: <b>{loggedin_user_name}</b>";

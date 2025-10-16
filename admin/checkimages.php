@@ -31,7 +31,10 @@ require('admin_global.php');
 if (!defined("ICON_EXT"))
 	define("ICON_EXT", "gif");
 
-$showthumb = isset($_GET['showthumb']) ? stripslashes(trim(urldecode($_GET['showthumb']))) : false;
+$showthumb = isset($_GET['showthumb']) ? basename(stripslashes(trim(urldecode($_GET['showthumb'])))) : false;
+if ($showthumb && (strpos($showthumb, '..') !== false || strpos($showthumb, '/') !== false || strpos($showthumb, '\\') !== false)) {
+    $showthumb = false;
+}
 
 //--------| Default Settings |-------------
 
@@ -80,7 +83,12 @@ if ($showthumb)
 
 	require(ROOT_PATH.'includes/image_utils.php');
 	$convert_options = init_convert_options();
-	$image = MEDIA_PATH . "/" . (($cat_id) ? $cat_id ."/" : "") . $showthumb;
+	$safe_cat_id = intval($cat_id);
+	$image = MEDIA_PATH . "/" . (($safe_cat_id) ? $safe_cat_id ."/" : "") . $showthumb;
+	$real_image = realpath($image);
+	if (!$real_image || strpos($real_image, realpath(MEDIA_PATH)) !== 0) {
+		$image = ICON_PATH . "/404." . ICON_EXT;
+	}
 	$ext = get_file_extension($showthumb);
 	$delete = false;
 	if (!file_exists($image))
@@ -108,11 +116,21 @@ if ($showthumb)
 	{
 		$thumb = ICON_PATH."/" . $ext . "." . ICON_EXT;
 	}
-	header("Content-Type: image/" . get_file_extension($thumb));
-	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");             // turn off caching
-	header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-	@readfile($thumb);
+	$real_thumb = realpath($thumb);
+	$icon_path_real = realpath(ICON_PATH);
+	$thumb_path_real = realpath(THUMB_PATH);
+	$temp_path_real = realpath($thumbpreview_tempdir);
+	if (!$real_thumb || ($icon_path_real && strpos($real_thumb, $icon_path_real) !== 0 && $thumb_path_real && strpos($real_thumb, $thumb_path_real) !== 0 && $temp_path_real && strpos($real_thumb, $temp_path_real) !== 0)) {
+		$thumb = ICON_PATH . "/404." . ICON_EXT;
+		$real_thumb = realpath($thumb);
+	}
+	if ($real_thumb && file_exists($real_thumb)) {
+		header("Content-Type: image/" . get_file_extension($thumb));
+		header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+		@readfile($real_thumb);
+	}
 	if ($delete)
 	{
 		@unlink($file);
@@ -126,19 +144,36 @@ include(ROOT_PATH.'includes/search_utils.php');
 
 function copyFile($src, $dest, $name, $cat_id = 0)
 {
-	if ($cat_id)
-		$dest .= "/".$cat_id;
+	$safe_cat_id = intval($cat_id);
+	$safe_name = basename($name);
+	if (strpos($safe_name, '..') !== false) {
+		return false;
+	}
+	if ($safe_cat_id)
+		$dest .= "/".$safe_cat_id;
 
 	$result = true;
 	if (!@is_dir($dest))
 	{
-		$oldumask = umask(0);
+		$oldumask = umask(0022);
 		$result = _mkdir($dest, 0755);
 		umask($oldumask);
 	}
 	if ($result)
 	{
-		return copy($src, $dest."/".$name);
+		$real_src = realpath($src);
+		if (!$real_src || strpos($real_src, '..') !== false) {
+			return false;
+		}
+		$real_dest = realpath($dest);
+		if (!$real_dest || strpos($real_dest, '..') !== false) {
+			return false;
+		}
+		$dest_file = $real_dest."/".$safe_name;
+		if (strpos(realpath(dirname($dest_file)), $real_dest) !== 0) {
+			return false;
+		}
+		return copy($real_src, $dest_file);
 	}
 	return false;
 }
@@ -180,26 +215,38 @@ if (!function_exists("trim_value"))
 
 function _rename($dir, $file_src, $file_dest, $force = false)
 {
-  $oldwd = getcwd();
-  chdir(realpath($dir));
-  if (!file_exists($file_src))
+  $safe_dir = realpath($dir);
+  if (!$safe_dir || strpos($safe_dir, '..') !== false) {
+    return false;
+  }
+  $safe_file_src = basename($file_src);
+  $safe_file_dest = basename($file_dest);
+  if (strpos($safe_file_src, '..') !== false || strpos($safe_file_dest, '..') !== false) {
+    return false;
+  }
+  $src_path = $safe_dir . '/' . $safe_file_src;
+  if (!file_exists($src_path))
     return false;
   $copy = "";
-  $file_name = get_file_name($file_dest);
-  $file_ext = get_file_extension($file_dest);
-  if (!$force && strtolower($file_src) == $file_dest && substr(PHP_OS, 0, 3) != "WIN")
+  $file_name = get_file_name($safe_file_dest);
+  $file_ext = get_file_extension($safe_file_dest);
+  if (!$force && strtolower($safe_file_src) == $safe_file_dest && substr(PHP_OS, 0, 3) != "WIN")
   {
   	$n = 2;
-  	while (file_exists($file_name.$copy.".".$file_ext))
+  	while (file_exists($safe_dir . '/' . $file_name.$copy.".".$file_ext))
   	{
   		$copy = "_".$n;
   		$n++;
   	}
   }
   $file = $file_name.$copy.".".$file_ext;
-  $ok = rename($file_src, $file);
-  chdir($oldwd);
-  return $ok ? $file : false;
+  $safe_file = basename($file);
+  if (strpos($safe_file, '..') !== false || strpos($safe_file, '/') !== false || strpos($safe_file, '\\') !== false || $safe_file !== $file) {
+    return false;
+  }
+  $dest_path = $safe_dir . '/' . $safe_file;
+  $ok = rename($src_path, $dest_path);
+  return $ok ? $safe_file : false;
 }
 
 // END FUNCTIONS
@@ -300,7 +347,7 @@ if ($action == "savenewimages")
 				$user_id = ($user_id) ? $user_id : ((isset($_POST['user_id']) && intval($_POST['user_id']) != 0) ? intval($_POST['user_id']) : $user_info['user_id']);
 
 				$image_description = (isset($_POST['image_description_'.$i])) ? trim($_POST['image_description_'.$i]) : "";
-				$image_date = (isset($_POST['image_date_'.$i])) ? ((trim($_POST['image_date_'.$i] != "")) ? "UNIX_TIMESTAMP('".trim($_POST['image_date_'.$i])."')" : time()) : time();
+				$image_date = (isset($_POST['image_date_'.$i])) ? ((trim($_POST['image_date_'.$i]) != "") ? "UNIX_TIMESTAMP('".addslashes(trim($_POST['image_date_'.$i]))."')" : time()) : time();
 				$image_download_url = (isset($_POST['image_download_url_'.$i])) ? trim($_POST['image_download_url_'.$i]) : "";
 
 				if (isset($_POST['image_keywords_'.$i]))
@@ -328,18 +375,28 @@ if ($action == "savenewimages")
 						if (isset($_POST[$key.'_'.$i]) && isset($table_fields[$key]))
 						{
 							$additional_field_sql .= ", $key";
-							$additional_value_sql .= ", '".un_htmlspecialchars(trim($_POST[$key.'_'.$i]))."'";
+							$additional_value_sql .= ", '".addslashes(un_htmlspecialchars(trim($_POST[$key.'_'.$i])))."'";
 						}
 					}
 				}
-				$file = MEDIA_PATH.(($old_cat_id != 0) ? "/".$old_cat_id : "")."/".$image_media_file;
-                $big_dir = MEDIA_PATH."/".$old_cat_id."/".$big_folder;
+				$safe_old_cat_id = intval($old_cat_id);
+				$safe_image_media_file = basename($image_media_file);
+				if (strpos($safe_image_media_file, '..') !== false || strpos($safe_image_media_file, '/') !== false || strpos($safe_image_media_file, '\\') !== false) {
+					$safe_image_media_file = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $safe_image_media_file);
+				}
+				$safe_big_folder = basename($big_folder);
+				if (strpos($safe_big_folder, '..') !== false || strpos($safe_big_folder, '/') !== false || strpos($safe_big_folder, '\\') !== false) {
+					$safe_big_folder = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $safe_big_folder);
+				}
+				$file = MEDIA_PATH.(($safe_old_cat_id != 0) ? "/".$safe_old_cat_id : "")."/".$safe_image_media_file;
+                $big_dir = MEDIA_PATH."/".$safe_old_cat_id."/".$safe_big_folder;
 				$big_file = "";
 				$log[] = str_replace("{file}", str_replace(ROOT_PATH, "", $file), $lang['cni_working']);
 				if (file_exists($file))
 				{
-					$image_media_file_backup = $image_media_file;
-					if ($cat_id != $old_cat_id)
+					$image_media_file_backup = $safe_image_media_file;
+					$safe_cat_id = intval($cat_id);
+					if ($safe_cat_id != $safe_old_cat_id)
 					{
 						$image_media_file = copy_media($image_media_file, $old_cat_id, $cat_id);
 						if ($image_media_file && file_exists(MEDIA_PATH."/".$cat_id."/".$image_media_file))
@@ -564,7 +621,7 @@ if ($action == "savenewimages")
   						$sql = "INSERT INTO ".IMAGES_TABLE."
   										(cat_id, user_id, image_name, image_description, image_keywords, image_date, image_active, image_media_file, image_thumb_file, image_download_url, image_allow_comments".$additional_field_sql.")
   										VALUES
-  										($cat_id, $user_id, '$image_name', '$image_description', '$image_keywords', $image_date, $image_active, '".addslashes($image_media_file)."', '".addslashes($image_thumb_file)."', '$image_download_url', $image_allow_comments".$additional_value_sql.")";
+  										($cat_id, $user_id, '".addslashes($image_name)."', '".addslashes($image_description)."', '".addslashes($image_keywords)."', $image_date, $image_active, '".addslashes($image_media_file)."', '".addslashes($image_thumb_file)."', '".addslashes($image_download_url)."', $image_allow_comments".$additional_value_sql.")";
   						$result = $site_db->query($sql);
   						$image_id = $site_db->get_insert_id();
   					}
@@ -752,7 +809,8 @@ if (isset($_POST['action']) && $action == "checkimages")
 				closedir($handle);
 			}
 		}
-		$cat_sql = implode(", ", $cats);
+		$safe_cats = array_map('intval', $cats);
+		$cat_sql = implode(", ", $safe_cats);
 		foreach ($image_list_all as $key => $val)
 		{
 			sort($image_list_all[$key]);
@@ -785,7 +843,8 @@ if (isset($_POST['action']) && $action == "checkimages")
 		$result = $site_db->query($sql);
 		while ($row = $site_db->fetch_array($result))
 		{
-			$cat_id = $cats[] = $row['cat_id'];
+			$cat_id = intval($row['cat_id']);
+			$cats[] = $cat_id;
 			$cat_path = ($cat_id == 0) ? "" : "/".$cat_id;
 			if ($handle = opendir(MEDIA_PATH.$cat_path))
 			{
@@ -806,7 +865,8 @@ if (isset($_POST['action']) && $action == "checkimages")
 		{
 			sort($image_list_all[$key]);
 		}
-		$cat_sql = implode(", ", $cats);
+		$safe_cats = array_map('intval', $cats);
+		$cat_sql = implode(", ", $safe_cats);
 	}
 	$sql = "SELECT image_media_file, cat_id
 					FROM ".IMAGES_TABLE."

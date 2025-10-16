@@ -83,7 +83,8 @@
             * Generate this cells' HTML
             */
 			cssClass = (i == this.date && month == this.month && year == this.year) ? 'calendar_today' : 'calendar_day';
-			linkHTML = '<a href="javascript: ' + this.callbackFunc + '(' + i + ', ' + (Number(month) + 1) + ', ' + year + '); ' + this.objName + '._hideLayer()">' + (i++) + '</a>';
+			var dayNum = i++;
+			linkHTML = '<a href="#" onclick="' + this.callbackFunc + '(' + dayNum + ', ' + (Number(month) + 1) + ', ' + year + '); ' + this.objName + '._hideLayer(); return false;">' + dayNum + '</a>';
 			ret[row][ret[row].length] = '<td align="center" class="' + cssClass + '">' + linkHTML + '</td>';
 		}
 
@@ -107,9 +108,9 @@
 		}
 
 		prevImgHTML  = '<img src="' + root_path + 'admin/images/arrow_back.gif" border="0" />';
-		prevLinkHTML = '<a href="javascript: ' + this.objName + '.show(' + previousMonth + ', ' + previousYear + ')">' + prevImgHTML + '</a>';
+		prevLinkHTML = '<a href="#" onclick="' + this.objName + '.show(' + previousMonth + ', ' + previousYear + '); return false;">' + prevImgHTML + '</a>';
 		nextImgHTML  = '<img src="' + root_path + 'admin/images/arrow.gif" border="0" />';
-		nextLinkHTML = '<a href="javascript: ' + this.objName + '.show(' + nextMonth + ', ' + nextYear + ')">' + nextImgHTML + '</a>';
+		nextLinkHTML = '<a href="#" onclick="' + this.objName + '.show(' + nextMonth + ', ' + nextYear + '); return false;">' + nextImgHTML + '</a>';
 
 		/**
         * Build month combo
@@ -154,8 +155,13 @@
 	function calendar_writeHTML()
 	{
 		if (is_ie5up || is_nav6up || is_gecko) {
-			document.write('<a href="javascript: ' + this.objName + '.show()"><img src="' + root_path + 'admin/images/calendar.gif" border="0" width="16" height="16" /></a>');
-			document.write('<div class="calendar" id="' + this.layerID + '" onmouseover="' + this.objName + '._mouseover(true)" onmouseout="' + this.objName + '._mouseover(false)"></div>');
+			var safeObjName = String(this.objName).replace(/[^a-zA-Z0-9_]/g, '');
+			var safeLayerID = String(this.layerID).replace(/[^a-zA-Z0-9_-]/g, '');
+			var safeRootPath = String(root_path).replace(/[^a-zA-Z0-9_\/.\-]/g, '');
+			if (safeObjName && safeLayerID && safeRootPath) {
+				document.write('<a href="#" onclick="' + safeObjName + '.show(); return false;"><img src="' + safeRootPath + 'admin/images/calendar.gif" border="0" width="16" height="16" /></a>');
+				document.write('<div class="calendar" id="' + safeLayerID + '" onmouseover="' + safeObjName + '._mouseover(true)" onmouseout="' + safeObjName + '._mouseover(false)"></div>');
+			}
 		}
 	}
 
@@ -219,35 +225,38 @@
 		return true;
 	}
 
-	calendar_oldOnmousemove = document.onmousemove ? document.onmousemove : new Function;
+	calendar_oldOnmousemove = document.onmousemove ? document.onmousemove : function(){};
 
-	document.onmousemove = function ()
+	document.onmousemove = function (e)
 	{
 		if (is_ie5up || is_nav6up || is_gecko) {
-			if (arguments[0]) {
-				calendar_mouseX = arguments[0].pageX;
-				calendar_mouseY = arguments[0].pageY;
-			} else {
-				calendar_mouseX = event.clientX + document.body.scrollLeft;
-				calendar_mouseY = event.clientY + document.body.scrollTop;
-				arguments[0] = null;
+			if (e) {
+				calendar_mouseX = e.pageX || (e.clientX + (document.body ? document.body.scrollLeft : 0));
+				calendar_mouseY = e.pageY || (e.clientY + (document.body ? document.body.scrollTop : 0));
+			} else if (window.event) {
+				calendar_mouseX = window.event.clientX + (document.body ? document.body.scrollLeft : 0);
+				calendar_mouseY = window.event.clientY + (document.body ? document.body.scrollTop : 0);
 			}
-
-			calendar_oldOnmousemove();
+			if (typeof calendar_oldOnmousemove === 'function') {
+				calendar_oldOnmousemove(e);
+			}
 		}
 	}
 
-	calendar_oldOnclick = document.onclick ? document.onclick : new Function;
+	calendar_oldOnclick = document.onclick ? document.onclick : function(){};
 
-	document.onclick = function ()
+	document.onclick = function (e)
 	{
 		if (is_ie5up || is_nav6up || is_gecko) {
 			if(!calendar_mouseoverStatus){
-				for(i=0; i<calendar_layers.length; ++i){
-					calendar_layers[i]._hideLayer();
+				for(var i=0; i<calendar_layers.length; ++i){
+					if (calendar_layers[i] && typeof calendar_layers[i]._hideLayer === 'function') {
+						calendar_layers[i]._hideLayer();
+					}
 				}
 			}
-
-			calendar_oldOnclick(arguments[0] ? arguments[0] : null);
+			if (typeof calendar_oldOnclick === 'function') {
+				calendar_oldOnclick(e || null);
+			}
 		}
 	}

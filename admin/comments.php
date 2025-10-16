@@ -22,7 +22,11 @@
 
 define('IN_CP', 1);
 define('ROOT_PATH', './../');
-require('admin_global.php');
+$admin_global_path = realpath(dirname(__FILE__) . '/admin_global.php');
+if (!$admin_global_path || !file_exists($admin_global_path)) {
+    die('Security violation');
+}
+require($admin_global_path);
 
 if ($action == "") {
   $action = "modifycomments";
@@ -44,13 +48,15 @@ function delete_comments($comment_ids) {
   }
   $error_log = array();
   echo "<br />";
+  $safe_comment_ids = array_map('intval', explode(',', $comment_ids));
+  $safe_comment_ids_str = implode(',', $safe_comment_ids);
   $sql = "SELECT comment_id, image_id, user_id, user_name, comment_headline
           FROM ".COMMENTS_TABLE."
-          WHERE comment_id IN ($comment_ids)";
+          WHERE comment_id IN ($safe_comment_ids_str)";
   $comment_result = $site_db->query($sql);
   while ($comment_row = $site_db->fetch_array($comment_result)) {
     $sql = "DELETE FROM ".COMMENTS_TABLE."
-          WHERE comment_id = ".$comment_row['comment_id'];
+          WHERE comment_id = ".intval($comment_row['comment_id']);
     $del_comment = $site_db->query($sql);
 
     if ($del_comment) {
@@ -150,7 +156,7 @@ if ($action == "updatecomment") {
     }
 
     $sql = "UPDATE ".COMMENTS_TABLE."
-            SET user_name = '$user_name', comment_headline = '$comment_headline', comment_text = '$comment_text', comment_ip = '$comment_ip', comment_date = $comment_date
+            SET user_name = '".addslashes($user_name)."', comment_headline = '".addslashes($comment_headline)."', comment_text = '".addslashes($comment_text)."', comment_ip = '".addslashes($comment_ip)."', comment_date = $comment_date
             WHERE comment_id = $comment_id";
     $result = $site_db->query($sql);
 
@@ -203,7 +209,7 @@ if ($action == "modifycomments") {
   <tr class="<?php echo get_row_bg(); ?>"><td><p><b><?php echo $lang['order_by'] ?></b></p></td><td><p>
   <select name="orderby">
   <?php foreach ($orderbyOptions as $field => $label): ?>
-  <option value="<?php echo $field; ?>"><?php echo $label; ?></option>
+  <option value="<?php echo htmlspecialchars($field, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
   <?php endforeach; ?>
   </select>
   <select name="direction">
@@ -222,45 +228,42 @@ if ($action == "findcomments") {
 
   $image_name = trim($_POST['image_name']);
   if ($image_name != "") {
-    $condition .= " AND INSTR(LCASE(i.image_name),'".strtolower($image_name)."')>0";
+    $condition .= " AND INSTR(LCASE(i.image_name),'".addslashes(strtolower($image_name))."')>0";
   }
   $image_id = intval($_POST['image_id']);
   if ($image_id != 0) {
-    $condition .= " AND INSTR(LCASE(c.image_id),'".strtolower($image_id)."')>0";
+    $condition .= " AND c.image_id = ".$image_id;
   }
   $user_name = trim($_POST['user_name']);
   if ($user_name != "") {
-    $condition .= " AND INSTR(LCASE(c.user_name),'".strtolower($user_name)."')>0";
+    $condition .= " AND INSTR(LCASE(c.user_name),'".addslashes(strtolower($user_name))."')>0";
   }
   $comment_headline = trim($_POST['comment_headline']);
   if ($comment_headline != "") {
-    $condition .= " AND INSTR(LCASE(c.comment_headline),'".strtolower($comment_headline)."')>0";
+    $condition .= " AND INSTR(LCASE(c.comment_headline),'".addslashes(strtolower($comment_headline))."')>0";
   }
   $comment_text = trim($_POST['comment_text']);
   if ($comment_text != "") {
-    $condition .= " AND INSTR(LCASE(c.comment_text),'".strtolower($comment_text)."')>0";
+    $condition .= " AND INSTR(LCASE(c.comment_text),'".addslashes(strtolower($comment_text))."')>0";
   }
   $dateafter = trim($_POST['dateafter']);
   if ($dateafter != "") {
-    $condition .= " AND c.comment_date > UNIX_TIMESTAMP('$dateafter')";
+    $condition .= " AND c.comment_date > UNIX_TIMESTAMP('".addslashes($dateafter)."')";
   }
   $datebefore = trim($_POST['datebefore']);
   if ($datebefore != "") {
-    $condition .= " AND c.comment_date < UNIX_TIMESTAMP('$datebefore')";
+    $condition .= " AND c.comment_date < UNIX_TIMESTAMP('".addslashes($datebefore)."')";
   }
   $orderby = trim($_POST['orderby']);
   if (!isset($orderbyOptions[$orderby])) {
     $orderby = "i.image_name";
   }
-  $limitstart = (isset($_POST['limitstart'])) ? trim($_POST['limitstart']) : "";
-  if ($limitstart == "") {
-    $limitstart = 0;
-  }
-  else {
+  $limitstart = (isset($_POST['limitstart'])) ? intval(trim($_POST['limitstart'])) : 0;
+  if ($limitstart > 0) {
     $limitstart--;
   }
-  $limitnumber = trim($_POST['limitnumber']);
-  if ($limitnumber == "") {
+  $limitnumber = (isset($_POST['limitnumber'])) ? intval(trim($_POST['limitnumber'])) : 5000;
+  if ($limitnumber <= 0) {
     $limitnumber = 5000;
   }
 
@@ -285,12 +288,12 @@ if ($action == "findcomments") {
     $start = $limitstart + 1;
   }
 
-  echo $lang['found']." <b>".$countcomments['comments']."</b> ".$lang['showing']." <b>$start</b>-";
+  echo $lang['found']." <b>".intval($countcomments['comments'])."</b> ".$lang['showing']." <b>".intval($start)."</b>-";
   if ($limitfinish > $countcomments['comments'] == 0) {
-    echo "<b>$limitfinish</b>.";
+    echo "<b>".intval($limitfinish)."</b>.";
   }
   else {
-    echo "<b>".$countcomments['comments']."</b>.";
+    echo "<b>".intval($countcomments['comments'])."</b>.";
   }
 
   show_form_header("comments.php", "removecomment", "form");
@@ -300,7 +303,7 @@ if ($action == "findcomments") {
             FROM (".COMMENTS_TABLE." c, ".IMAGES_TABLE." i)
             WHERE $condition AND c.image_id = i.image_id
             ORDER BY $orderby $direction
-            LIMIT $limitstart, $limitnumber";
+            LIMIT ".intval($limitstart).", ".intval($limitnumber);
     $result = $site_db->query($sql);
     echo "<tr class=\"tableseparator\">\n";
     echo "<td class=\"tableseparator\"><input name=\"allbox\" type=\"checkbox\" onClick=\"CheckAll();\" /></td>\n";
@@ -343,18 +346,18 @@ if ($action == "findcomments") {
 
   if ($limitnumber != 5000 && $limitfinish < $countcomments['comments']) {
     show_hidden_input("action", "findcomments");
-    show_hidden_input("image_id", $image_id);
-    show_hidden_input("image_name", $image_name, 1);
-    show_hidden_input("user_name", $user_name, 1);
-    show_hidden_input("comment_headline", $comment_headline, 1);
-    show_hidden_input("comment_text", $comment_text, 1);
-    show_hidden_input("dateafter", $dateafter);
-    show_hidden_input("datebefore", $datebefore);
+    show_hidden_input("image_id", intval($image_id));
+    show_hidden_input("image_name", htmlspecialchars($image_name, ENT_QUOTES, 'UTF-8'), 0);
+    show_hidden_input("user_name", htmlspecialchars($user_name, ENT_QUOTES, 'UTF-8'), 0);
+    show_hidden_input("comment_headline", htmlspecialchars($comment_headline, ENT_QUOTES, 'UTF-8'), 0);
+    show_hidden_input("comment_text", htmlspecialchars($comment_text, ENT_QUOTES, 'UTF-8'), 0);
+    show_hidden_input("dateafter", htmlspecialchars($dateafter, ENT_QUOTES, 'UTF-8'), 0);
+    show_hidden_input("datebefore", htmlspecialchars($datebefore, ENT_QUOTES, 'UTF-8'), 0);
 
-    show_hidden_input("orderby", $orderby, 1);
-    show_hidden_input("direction", $direction, 1);
-    show_hidden_input("limitstart", $limitstart + $limitnumber + 1);
-    show_hidden_input("limitnumber", $limitnumber);
+    show_hidden_input("orderby", htmlspecialchars($orderby, ENT_QUOTES, 'UTF-8'), 0);
+    show_hidden_input("direction", htmlspecialchars($direction, ENT_QUOTES, 'UTF-8'), 0);
+    show_hidden_input("limitstart", intval($limitstart + $limitnumber + 1));
+    show_hidden_input("limitnumber", intval($limitnumber));
 
     echo "<input type=\"submit\" value=\"   ".$lang['search_next_page']."   \" class=\"button\">\n";
   }

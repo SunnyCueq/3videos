@@ -20,7 +20,7 @@
  *                                                                        *
  *************************************************************************/
 if (!defined('ROOT_PATH')) {
-  die("Security violation");
+  throw new Exception("Security violation");
 }
 
 /*
@@ -54,7 +54,7 @@ class Zipfile {
     // but php4 should auto-close all open files when finalizing script.
     $this->tmpfp = @tmpfile();
     if (!$this->tmpfp) {
-      die("Cannot get temporary file!");
+      throw new Exception("Cannot get temporary file!");
     }
 
     @register_shutdown_function(array(&$this, 'close'));
@@ -123,7 +123,7 @@ class Zipfile {
     // empty file!?
     if (!count($this->ctrl_dirs))
     {
-        die("Zipfile is empty!");
+        throw new Exception("Zipfile is empty!");
     }
 
     // offset means: length of the data-segments
@@ -207,7 +207,8 @@ class Zipfile {
     // this bit will tell the browser to
     // a) save the file
     // b) the default name
-    header(sprintf('Content-Disposition: attachment; filename="%s"', $file_name));
+    $safe_filename = basename($file_name);
+    header(sprintf('Content-Disposition: attachment; filename="%s"', $safe_filename));
 
     // if we have compression/op_handler active we would cause archive corruption when sending content length
     // thus we simply don't do it in this case (s.a.)
@@ -216,18 +217,24 @@ class Zipfile {
     }
 
     // pass thru the data
-    fseek($this->tmpfp, 0);
-    fpassthru($this->tmpfp);
+    if ($this->tmpfp && is_resource($this->tmpfp)) {
+      fseek($this->tmpfp, 0);
+      fpassthru($this->tmpfp);
+    }
     $this->close();
   }
 
   function store($file_name) {
     $len = $this->prepare();
 
-    $fp = fopen($file_name, "wb");
+    $safe_filename = basename($file_name);
+    if (strpos($safe_filename, '..') !== false || strpos($safe_filename, '/') !== false || strpos($safe_filename, '\\') !== false) {
+      throw new Exception("Invalid filename");
+    }
+    $fp = fopen($safe_filename, "wb");
 
     if (!$fp) {
-        return false;
+        throw new Exception("Cannot create file");
     }
 
     fseek($this->tmpfp, 0);

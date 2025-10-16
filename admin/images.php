@@ -194,35 +194,36 @@ if ($action == "updateimage") {
   $error = array();
 
   $image_id = (isset($_POST['image_id'])) ? intval($_POST['image_id']) : intval($_GET['image_id']);
-  $image_name = un_htmlspecialchars(trim($_POST['image_name']));
-  $image_description = un_htmlspecialchars(trim($_POST['image_description']));
+  $image_name = $site_db->escape_string(un_htmlspecialchars(trim($_POST['image_name'])));
+  $image_description = $site_db->escape_string(un_htmlspecialchars(trim($_POST['image_description'])));
 
   $image_keywords = un_htmlspecialchars(trim($_POST['image_keywords']));
   $image_keywords = preg_replace("/[\n\r]/is", ",", $image_keywords);
   $image_keywords_arr = explode(',', $image_keywords);
   array_walk($image_keywords_arr, 'trim_value');
-  $image_keywords = implode(',', array_unique(array_filter($image_keywords_arr)));
+  $image_keywords = $site_db->escape_string(implode(',', array_unique(array_filter($image_keywords_arr))));
 
   $cat_id = intval($_POST['cat_id']);
   $old_cat_id = intval($_POST['old_cat_id']);
 
   $user_id = (intval($_POST['user_id']) != 0) ? intval($_POST['user_id']) : $user_info['user_id'];
 
-  $image_date = (trim($_POST['image_date']) != "") ? "UNIX_TIMESTAMP('".trim($_POST['image_date'])."')" : time();
+  $image_date_input = $site_db->escape_string(trim($_POST['image_date']));
+  $image_date = ($image_date_input != "") ? "UNIX_TIMESTAMP('".$image_date_input."')" : time();
   $image_active = intval($_POST['image_active']);
   $image_allow_comments = intval($_POST['image_allow_comments']);
   $image_downloads = (trim($_POST['image_downloads']) != "") ? intval($_POST['image_downloads']) : 0;
   $image_votes = (trim($_POST['image_votes']) != "") ? intval($_POST['image_votes']) : 0;
-  $image_rating = (trim($_POST['image_rating']) != "") ? sprintf("%.2f", trim($_POST['image_rating'])) : "0.00";
+  $image_rating = (trim($_POST['image_rating']) != "") ? sprintf("%.2f", floatval(trim($_POST['image_rating']))) : "0.00";
   $image_hits = (trim($_POST['image_hits']) != "") ? intval(trim($_POST['image_hits'])) : 0;
 
-  $remote_file = trim($_POST['remote_file']);
-  $remote_thumb_file = trim($_POST['remote_thumb_file']);
+  $remote_file = $site_db->escape_string(trim($_POST['remote_file']));
+  $remote_thumb_file = $site_db->escape_string(trim($_POST['remote_thumb_file']));
 
-  $old_file_name = trim($_POST['old_file_name']);
-  $old_thumb_file_name = trim($_POST['old_thumb_file_name']);
+  $old_file_name = $site_db->escape_string(trim($_POST['old_file_name']));
+  $old_thumb_file_name = $site_db->escape_string(trim($_POST['old_thumb_file_name']));
 
-  $image_download_url = trim($_POST['image_download_url']);
+  $image_download_url = $site_db->escape_string(trim($_POST['image_download_url']));
   $delete_thumb_file = (isset($_POST['delete_thumb_file']) && $_POST['delete_thumb_file'] == 1) ? 1 : 0;
 
   if ($image_name == "") {
@@ -316,18 +317,22 @@ if ($action == "updateimage") {
   }
 
   if (empty($error)) {
+    $new_name_escaped = $site_db->escape_string($new_name);
+    $new_thumb_name_escaped = $site_db->escape_string($new_thumb_name);
+    
     $additional_sql = "";
     if (!empty($additional_image_fields)) {
       $table_fields = $site_db->get_table_fields(IMAGES_TABLE);
       foreach ($additional_image_fields as $key => $val) {
         if (isset($_POST[$key]) && isset($table_fields[$key])) {
-          $additional_sql .= ", $key = '".un_htmlspecialchars(trim($_POST[$key]))."'";
+          $safe_value = $site_db->escape_string(un_htmlspecialchars(trim($_POST[$key])));
+          $additional_sql .= ", $key = '".$safe_value."'";
         }
       }
     }
 
     $sql = "UPDATE ".IMAGES_TABLE."
-            SET cat_id = $cat_id, user_id = $user_id, image_name = '$image_name', image_description = '$image_description', image_keywords = '$image_keywords', image_date = $image_date, image_active = $image_active, image_media_file = '$new_name', image_thumb_file = '$new_thumb_name', image_download_url = '$image_download_url', image_allow_comments = $image_allow_comments, image_downloads = $image_downloads, image_votes = $image_votes, image_rating = '$image_rating', image_hits = $image_hits".$additional_sql."
+            SET cat_id = $cat_id, user_id = $user_id, image_name = '$image_name', image_description = '$image_description', image_keywords = '$image_keywords', image_date = $image_date, image_active = $image_active, image_media_file = '$new_name_escaped', image_thumb_file = '$new_thumb_name_escaped', image_download_url = '$image_download_url', image_allow_comments = $image_allow_comments, image_downloads = $image_downloads, image_votes = $image_votes, image_rating = '$image_rating', image_hits = $image_hits".$additional_sql."
             WHERE image_id = $image_id";
     $result = $site_db->query($sql);
 

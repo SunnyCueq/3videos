@@ -56,7 +56,7 @@ $cache_id = create_cache_id(
   'page.index',
   [
     $user_info[$user_table_fields['user_id']],
-    isset($user_info['lightbox_image_ids']) ? substr(md5($user_info['lightbox_image_ids']), 0, 8) : 0,
+    isset($user_info['lightbox_image_ids']) ? substr(hash('sha256', $user_info['lightbox_image_ids']), 0, 8) : 0,
     $config['template_dir'],
     $config['language_dir']
   ]
@@ -108,8 +108,10 @@ $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_descriptio
         LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = i.user_id)
         WHERE i.image_active = 1 AND c.cat_id = i.cat_id AND i.cat_id NOT IN (".get_auth_cat_sql("auth_viewcat", "NOTIN").")
         ORDER BY i.image_date DESC
-        LIMIT $num_new_images";
-$result = $site_db->query($sql);
+        LIMIT ?";
+$stmt = $site_db->prepare($sql);
+$stmt->execute([$num_new_images]);
+$result = $stmt;
 $num_rows = $site_db->get_numrows($result);
 
 if (!$num_rows)  {

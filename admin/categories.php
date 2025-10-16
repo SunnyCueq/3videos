@@ -22,7 +22,13 @@
 
 define('IN_CP', 1);
 define('ROOT_PATH', './../');
-require('admin_global.php');
+$admin_global_path = realpath('admin_global.php');
+if (!$admin_global_path || strpos($admin_global_path, realpath(__DIR__)) !== 0 || !is_readable($admin_global_path)) {
+    error_log('Security: Unauthorized file access attempt');
+    http_response_code(403);
+    exit(1);
+}
+require($admin_global_path);
 
 $show_all_subcats = false;
 $open_cat_link = '<img src="./images/plus.gif" border="0">';
@@ -75,35 +81,41 @@ function show_access_select($type, $status, $title = "")
 
 function create_cat_folder($path, $mode)
 {
-    if (@is_dir($path)) {
-        @chmod($path, $mode);
+    $base_path = realpath(dirname($path));
+    $folder_name = basename($path);
+    if (!$base_path || strpos($base_path, '..') !== false || strpos($folder_name, '..') !== false) {
+        return false;
+    }
+    $safe_path = $base_path . DIRECTORY_SEPARATOR . $folder_name;
+    if (@is_dir($safe_path)) {
         return true;
     } else {
-        $oldumask = umask(0);
-        $result = mkdir($path, $mode);
+        $oldumask = umask(0022);
+        $result = mkdir($safe_path, 0755, true);
         umask($oldumask);
-        if (!@is_dir($path) || !$result) {
-            $result = mkdir($path, 0755);
-            @chmod($path, $mode);
-        }
         return $result;
     }
 }
 
 function remove_cat_folder($path)
 {
+    $real_path = realpath($path);
+    if (!$real_path || strpos($real_path, '..') !== false) {
+        return false;
+    }
     $ok = 1;
-    if (@is_dir($path)) {
-        $handle = opendir($path);
+    if (@is_dir($real_path)) {
+        $handle = opendir($real_path);
         while ($file = @readdir($handle)) {
-            if ($file != "." && $file != "..") {
-                $ok = (!remove_cat_folder($path."/".$file)) ? 0 : $ok;
+            $file = basename($file);
+            if ($file != "." && $file != ".." && strpos($file, '..') === false) {
+                $ok = (!remove_cat_folder($real_path."/".$file)) ? 0 : $ok;
             }
         }
         closedir($handle);
-        $ok = (!rmdir($path)) ? 0 : $ok;
+        $ok = (!rmdir($real_path)) ? 0 : $ok;
     } else {
-        $ok = (!unlink($path)) ? 0 : $ok;
+        $ok = (!unlink($real_path)) ? 0 : $ok;
     }
     return $ok;
 }
@@ -116,68 +128,69 @@ function remove_subcategories($cid = 0, $depth = 1)
         return false;
     }
     foreach ($category_cache[$cid] as $key => $cats) {
+        $safe_cat_id = (int)$cats['cat_id'];
         echo "<table border=\"0\" cellpadding=\"2\" cellspacing=\"0\"><tr><td>\n";
         if ($depth > 1) {
             echo str_repeat("&nbsp;&nbsp;&nbsp;&nbsp;", $depth - 1)."\n";
         }
         echo "</td><td>\n";
 
-        $sql = "DELETE FROM ".GROUP_ACCESS_TABLE."
-            WHERE cat_id = ".$cats['cat_id'];
+        $sql = "DELETE FROM ".GROUP_ACCESS_TABLE." WHERE cat_id = ".$safe_cat_id;
         $site_db->query($sql);
 
-        $sql = "DELETE FROM ".CATEGORIES_TABLE."
-            WHERE cat_id = ".$cats['cat_id'];
+        $sql = "DELETE FROM ".CATEGORIES_TABLE." WHERE cat_id = ".$safe_cat_id;
+        $result = $site_db->query($sql);
 
-        if ($site_db->query($sql)) {
-            echo $lang['cat_delete_success']." <b>".format_text($cats['cat_name'], 2)."</b> (ID: ".$cats['cat_id'].")<br />\n";
+        if ($result) {
+            echo $lang['cat_delete_success']." <b>".format_text($cats['cat_name'], 2)."</b> (ID: ".$safe_cat_id.")<br />\n";
         } else {
-            $error_log[] = $lang['cat_delete_error']." <b>".format_text($cats['cat_name'], 2)."</b> (ID: ".$cats['cat_id'].")";
+            $error_log[] = $lang['cat_delete_error']." <b>".format_text($cats['cat_name'], 2)."</b> (ID: ".$safe_cat_id.")";
         }
 
-        $sql = "SELECT image_id
-            FROM ".IMAGES_TABLE."
-            WHERE cat_id = ".$cats['cat_id'];
+        $sql = "SELECT image_id FROM ".IMAGES_TABLE." WHERE cat_id = ".$safe_cat_id;
         $img_result = $site_db->query($sql);
 
-        $image_ids_sql = 0;
+        $image_ids_sql = array();
         while ($image_row = $site_db->fetch_array($img_result)) {
-            $image_ids_sql .= (($image_ids_sql != "") ? ", " : "").$image_row['image_id'];
+            $image_ids_sql[] = intval($image_row['image_id']);
         }
 
-        $sql = "DELETE FROM ".IMAGES_TABLE."
-            WHERE image_id IN ($image_ids_sql)";
-        if ($site_db->query($sql)) {
-            echo "-&raquo ".$lang['image_delete_success']."<br />\n";
-        } else {
-            $error_log[] = $lang['image_delete_error']." (".format_text($cats['cat_name'], 2).", ID: ".$cats['cat_id'].")";
+        if (!empty($image_ids_sql)) {
+            $sql = "DELETE FROM ".IMAGES_TABLE."
+                WHERE image_id IN (".implode(',', $image_ids_sql).")";
+            if ($site_db->query($sql)) {
+                echo "-&raquo ".$lang['image_delete_success']."<br />\n";
+            } else {
+                $error_log[] = $lang['image_delete_error']." (".format_text($cats['cat_name'], 2).", ID: ".$cats['cat_id'].")";
+            }
         }
 
-        if (!empty($cats['cat_id'])) {
-            if (remove_cat_folder(MEDIA_PATH."/".$cats['cat_id'])) {
+        if (!empty($safe_cat_id)) {
+            if (remove_cat_folder(MEDIA_PATH."/".$safe_cat_id)) {
                 echo "-&raquo ".$lang['file_delete_success']."<br />\n";
             } else {
-                $error_log[] = $lang['file_delete_error']." (".format_text($cats['cat_name'], 2).", ID: ".$cats['cat_id'].")";
+                $error_log[] = $lang['file_delete_error']." (".format_text($cats['cat_name'], 2).", ID: ".$safe_cat_id.")";
             }
-            if (remove_cat_folder(THUMB_PATH."/".$cats['cat_id'])) {
+            if (remove_cat_folder(THUMB_PATH."/".$safe_cat_id)) {
                 echo "-&raquo ".$lang['thumb_delete_success']."<br />\n";
             } else {
-                $error_log[] = $lang['thumb_delete_error']." (".format_text($cats['cat_name'], 2).", ID: ".$cats['cat_id'].")";
+                $error_log[] = $lang['thumb_delete_error']." (".format_text($cats['cat_name'], 2).", ID: ".$safe_cat_id.")";
             }
         }
 
-        $sql = "DELETE FROM ".COMMENTS_TABLE."
-            WHERE image_id IN ($image_ids_sql)";
-        if ($site_db->query($sql)) {
-            echo "-&raquo ".$lang['comments_delete_success']."<br />\n";
-        } else {
-            $error_log[] = $lang['comments_delete_error']." (".format_text($cats['cat_name'], 2).", ID: ".$cats['cat_id'].")";
+        if (!empty($image_ids_sql)) {
+            $sql = "DELETE FROM ".COMMENTS_TABLE."
+                WHERE image_id IN (".implode(',', $image_ids_sql).")";
+            if ($site_db->query($sql)) {
+                echo "-&raquo ".$lang['comments_delete_success']."<br />\n";
+            } else {
+                $error_log[] = $lang['comments_delete_error']." (".format_text($cats['cat_name'], 2).", ID: ".$safe_cat_id.")";
+            }
+            remove_searchwords(implode(',', $image_ids_sql));
         }
 
-        remove_searchwords($image_ids_sql);
-
         echo "<br /></td></tr></table>\n";
-        remove_subcategories($cats['cat_id'], $depth + 1);
+        remove_subcategories($safe_cat_id, $depth + 1);
     }
     unset($category_cache[$cid]);
     return true;
@@ -236,16 +249,11 @@ function show_category_rows($cid = 0, $depth = 1)
 function update_cat_order($parent_id = 0)
 {
     global $site_db;
-    $sql = "SELECT cat_id
-          FROM ".CATEGORIES_TABLE."
-          WHERE cat_parent_id = $parent_id
-          ORDER BY cat_order ASC";
+    $sql = "SELECT cat_id FROM ".CATEGORIES_TABLE." WHERE cat_parent_id = ".intval($parent_id)." ORDER BY cat_order ASC";
     $result = $site_db->query($sql);
     $i = 10;
     while ($row = $site_db->fetch_array($result)) {
-        $sql = "UPDATE ".CATEGORIES_TABLE."
-            SET cat_order = $i
-            WHERE cat_id = ".$row['cat_id'];
+        $sql = "UPDATE ".CATEGORIES_TABLE." SET cat_order = ".intval($i)." WHERE cat_id = ".intval($row['cat_id']);
         $site_db->query($sql);
         $i += 10;
     }
@@ -352,9 +360,7 @@ if ($action == "ordercat") {
 
     $number = ($move == "up") ? -15 : 15;
 
-    $sql = "UPDATE ".CATEGORIES_TABLE."
-          SET cat_order = cat_order + $number
-          WHERE cat_id = $cat_id";
+    $sql = "UPDATE ".CATEGORIES_TABLE." SET cat_order = cat_order + ".intval($number)." WHERE cat_id = ".intval($cat_id);
     $site_db->query($sql);
 
     update_cat_order($cat_cache[$cat_id]['cat_parent_id']);
@@ -380,59 +386,59 @@ if ($action == "deletecat") {
     echo "<tr><td class=\"tablerow\">\n";
     echo "<table border=\"0\" cellpadding=\"2\" cellspacing=0><tr><td>&nbsp;</td><td>\n";
 
-    $sql = "DELETE FROM ".GROUP_ACCESS_TABLE."
-          WHERE cat_id = ".$cat_id;
+    $sql = "DELETE FROM ".GROUP_ACCESS_TABLE." WHERE cat_id = ".intval($cat_id);
     $site_db->query($sql);
 
-    $sql = "DELETE FROM ".CATEGORIES_TABLE."
-          WHERE cat_id = ".$cat_id;
+    $sql = "DELETE FROM ".CATEGORIES_TABLE." WHERE cat_id = ".intval($cat_id);
+    $result = $site_db->query($sql);
 
-    if ($site_db->query($sql)) {
+    if ($result) {
         echo $lang['cat_delete_success']." <b>".format_text($cat_cache[$cat_id]['cat_name'], 2)."</b> (ID: ".$cat_id.")<br />\n";
     } else {
         $error_log[] = $lang['cat_delete_error']." <b>".format_text($cat_cache[$cat_id]['cat_name'], 2)."</b> (ID: ".$cat_id.")";
     }
 
-    $sql = "SELECT image_id
-          FROM ".IMAGES_TABLE."
-          WHERE cat_id = ".$cat_id;
+    $sql = "SELECT image_id FROM ".IMAGES_TABLE." WHERE cat_id = ".intval($cat_id);
     $img_result = $site_db->query($sql);
 
-    $image_ids_sql = 0;
+    $image_ids_sql = array();
     while ($image_row = $site_db->fetch_array($img_result)) {
-        $image_ids_sql .= (($image_ids_sql != "") ? ", " : "").$image_row['image_id'];
+        $image_ids_sql[] = intval($image_row['image_id']);
     }
 
-    $sql = "DELETE FROM ".IMAGES_TABLE."
-          WHERE image_id IN ($image_ids_sql)";
-    if ($site_db->query($sql)) {
-        echo "-&raquo ".$lang['image_delete_success']."<br />\n";
-    } else {
-        $error_log[] = $lang['image_delete_error']." (".format_text($cat_cache[$cat_id]['cat_name'], 2).", ID: ".$cat_id.")";
+    if (!empty($image_ids_sql)) {
+        $sql = "DELETE FROM ".IMAGES_TABLE."
+              WHERE image_id IN (".implode(',', $image_ids_sql).")";
+        if ($site_db->query($sql)) {
+            echo "-&raquo ".$lang['image_delete_success']."<br />\n";
+        } else {
+            $error_log[] = $lang['image_delete_error']." (".format_text($cat_cache[$cat_id]['cat_name'], 2).", ID: ".$cat_id.")";
+        }
     }
 
     if (!empty($cat_id)) {
-        if (remove_cat_folder(MEDIA_PATH."/".$cat_id)) {
+        if (remove_cat_folder(MEDIA_PATH."/".intval($cat_id))) {
             echo "-&raquo ".$lang['file_delete_success']."<br />\n";
         } else {
             $error_log[] = $lang['file_delete_error']." (".format_text($cat_cache[$cat_id]['cat_name'], 2).", ID: ".$cat_id.")";
         }
-        if (remove_cat_folder(THUMB_PATH."/".$cat_id)) {
+        if (remove_cat_folder(THUMB_PATH."/".intval($cat_id))) {
             echo "-&raquo ".$lang['thumb_delete_success']."<br />\n";
         } else {
             $error_log[] = $lang['thumb_delete_error']." (".format_text($cat_cache[$cat_id]['cat_name'], 2).", ID: ".$cat_id.")";
         }
     }
 
-    $sql = "DELETE FROM ".COMMENTS_TABLE."
-          WHERE image_id IN ($image_ids_sql)";
-    if ($site_db->query($sql)) {
-        echo "-&raquo ".$lang['comments_delete_success']."<br />\n";
-    } else {
-        $error_log[] = $lang['comments_delete_error']." (".format_text($cat_cache[$cat_id]['cat_name'], 2).", ID: ".$cat_id.")";
+    if (!empty($image_ids_sql)) {
+        $sql = "DELETE FROM ".COMMENTS_TABLE."
+              WHERE image_id IN (".implode(',', $image_ids_sql).")";
+        if ($site_db->query($sql)) {
+            echo "-&raquo ".$lang['comments_delete_success']."<br />\n";
+        } else {
+            $error_log[] = $lang['comments_delete_error']." (".format_text($cat_cache[$cat_id]['cat_name'], 2).", ID: ".$cat_id.")";
+        }
+        remove_searchwords(implode(',', $image_ids_sql));
     }
-
-    remove_searchwords($image_ids_sql);
 
     echo "<br /></td></tr></table>\n";
     echo "</td></tr>\n";
@@ -495,7 +501,7 @@ if ($action == "savecat") {
         if (!$cat_order) {
             $sql = "SELECT cat_order
               FROM ".CATEGORIES_TABLE."
-              WHERE cat_parent_id = $cat_parent_id
+              WHERE cat_parent_id = ".intval($cat_parent_id)."
               ORDER BY cat_order DESC
               LIMIT 1";
             $catorder = $site_db->query_firstrow($sql);
@@ -508,7 +514,7 @@ if ($action == "savecat") {
         $sql = "INSERT INTO ".CATEGORIES_TABLE."
             (cat_name, cat_description, cat_parent_id, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment)
             VALUES
-            ('$cat_name', '$cat_description', $cat_parent_id, $cat_order, $auth_viewcat, $auth_viewimage, $auth_download, $auth_upload, $auth_directupload, $auth_vote, $$auth_readcomment, $auth_postcomment)";
+            ('".$site_db->escape($cat_name)."', '".$site_db->escape($cat_description)."', ".intval($cat_parent_id).", ".intval($cat_order).", ".intval($auth_viewcat).", ".intval($auth_viewimage).", ".intval($auth_download).", ".intval($auth_upload).", ".intval($auth_directupload).", ".intval($auth_vote).", ".intval($auth_readcomment).", ".intval($auth_postcomment).")";
         $result = $site_db->query($sql);
         $cat_id = $site_db->get_insert_id();
 
@@ -517,8 +523,8 @@ if ($action == "savecat") {
                 update_cat_order($cat_parent_id);
             }
             $msg = $lang['cat_add_success'];
-            create_cat_folder(MEDIA_PATH."/".$cat_id, CHMOD_DIRS);
-            create_cat_folder(THUMB_PATH."/".$cat_id, CHMOD_DIRS);
+            create_cat_folder(MEDIA_PATH."/".intval($cat_id), 0755);
+            create_cat_folder(THUMB_PATH."/".intval($cat_id), 0755);
         } else {
             $msg = $lang['cat_add_error'];
         }
@@ -561,7 +567,7 @@ if ($action == "addcat") {
 
         $sql = "SELECT cat_name, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
             FROM ".CATEGORIES_TABLE."
-            WHERE cat_id = $cat_parent_id";
+            WHERE cat_id = ".intval($cat_parent_id);
         $row = $site_db->query_firstrow($sql);
 
         foreach ($access_field_array as $key => $val) {
@@ -615,7 +621,7 @@ if ($action == "updatecat") {
         if (!$cat_order) {
             $sql = "SELECT cat_order
               FROM ".CATEGORIES_TABLE."
-              WHERE cat_parent_id = $cat_parent_id
+              WHERE cat_parent_id = ".intval($cat_parent_id)."
               ORDER BY cat_order DESC
               LIMIT 1";
             $catorder = $site_db->query_firstrow($sql);
@@ -626,8 +632,8 @@ if ($action == "updatecat") {
         }
 
         $sql = "UPDATE ".CATEGORIES_TABLE."
-            SET cat_name = '$cat_name', cat_description = '$cat_description', cat_parent_id = $cat_parent_id, cat_order = $cat_order, cat_hits = $cat_hits, auth_viewcat = $auth_viewcat, auth_viewimage = $auth_viewimage, auth_download = $auth_download, auth_upload = $auth_upload, auth_directupload = $auth_directupload, auth_vote = $auth_vote = $auth_readcomment = $auth_readcomment, auth_postcomment = $auth_postcomment
-            WHERE cat_id = $cat_id";
+            SET cat_name = '".$site_db->escape($cat_name)."', cat_description = '".$site_db->escape($cat_description)."', cat_parent_id = ".intval($cat_parent_id).", cat_order = ".intval($cat_order).", cat_hits = ".intval($cat_hits).", auth_viewcat = ".intval($auth_viewcat).", auth_viewimage = ".intval($auth_viewimage).", auth_download = ".intval($auth_download).", auth_upload = ".intval($auth_upload).", auth_directupload = ".intval($auth_directupload).", auth_vote = ".intval($auth_vote).", auth_readcomment = ".intval($auth_readcomment).", auth_postcomment = ".intval($auth_postcomment)."
+            WHERE cat_id = ".intval($cat_id);
         $result = $site_db->query($sql);
 
         if ($result && $do_update_cat_order) {
@@ -651,7 +657,7 @@ if ($action == "editcat") {
 
     $sql = "SELECT cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
           FROM ".CATEGORIES_TABLE."
-          WHERE cat_id = $cat_id";
+          WHERE cat_id = ".intval($cat_id);
     $cat_row = $site_db->query_firstrow($sql);
 
     show_admin_header();
@@ -740,7 +746,8 @@ if ($action == "modifycats") {
     if ($show_all_subcats || $open_all || (!empty($GLOBALS['map']) && is_array($GLOBALS['map']))) {
         $where_sql = "";
         if (!$show_all_subcats && !$open_all) {
-            $where_sql = "WHERE cat_parent_id IN (".implode(", ", $GLOBALS['map']).")";
+            $safe_map_ids = array_map('intval', $GLOBALS['map']);
+            $where_sql = "WHERE cat_parent_id IN (".implode(", ", $safe_map_ids).")";
         }
         $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
             FROM ".CATEGORIES_TABLE."

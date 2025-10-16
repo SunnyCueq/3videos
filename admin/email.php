@@ -23,7 +23,11 @@
 $nozip = 1;
 define('IN_CP', 1);
 define('ROOT_PATH', './../');
-require('admin_global.php');
+$admin_global_path = realpath(dirname(__FILE__) . '/admin_global.php');
+if (!$admin_global_path || !file_exists($admin_global_path)) {
+    die('Security violation');
+}
+require($admin_global_path);
 
 if ($action == "") {
   $action = "emailusers";

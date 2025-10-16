@@ -81,6 +81,14 @@ function copy_media($image_media_file, $from_cat = 0, $to_cat = 0) {
     return $image_media_file;
   }
 
+  $from_cat = intval($from_cat);
+  $to_cat = intval($to_cat);
+  $image_media_file = basename($image_media_file);
+  
+  if (strpos($image_media_file, '..') !== false || empty($image_media_file)) {
+    return false;
+  }
+  
   $image_src = ($from_cat != -1) ? MEDIA_PATH.(($from_cat != 0) ? "/".$from_cat : "") : MEDIA_TEMP_PATH;
   $image_dest = ($to_cat != -1) ? MEDIA_PATH.(($to_cat != 0) ? "/".$to_cat : "") : MEDIA_TEMP_PATH;
   return copy_file($image_src, $image_dest, $image_media_file, $image_media_file, $config['upload_mode']);
@@ -92,6 +100,14 @@ function copy_thumbnail($image_media_file, $image_thumb_file, $from_cat = 0, $to
     return $image_thumb_file;
   }
 
+  $from_cat = intval($from_cat);
+  $to_cat = intval($to_cat);
+  $image_thumb_file = basename($image_thumb_file);
+  
+  if (strpos($image_thumb_file, '..') !== false || empty($image_thumb_file)) {
+    return false;
+  }
+  
   $thumb_src = ($from_cat != -1) ? THUMB_PATH.(($from_cat != 0) ? "/".$from_cat : "") : THUMB_TEMP_PATH;
   $thumb_dest = ($to_cat != -1) ? THUMB_PATH.(($to_cat != 0) ? "/".$to_cat : "") : THUMB_TEMP_PATH;
 
@@ -108,23 +124,38 @@ function copy_thumbnail($image_media_file, $image_thumb_file, $from_cat = 0, $to
 
 function copy_file($image_src, $image_dest, $image_media_file, $dest_file_name, $type, $filter = 1, $move = 1)
 {
+  $image_media_file = basename($image_media_file);
+  $dest_file_name = basename($dest_file_name);
+  
+  // Path traversal protection
+  if (strpos($image_media_file, '..') !== false || strpos($dest_file_name, '..') !== false) {
+    return false;
+  }
+  
+  if (strpos($image_src, '..') !== false || strpos($image_dest, '..') !== false) {
+    return false;
+  }
+  
   $image_src_file = $image_src."/".$image_media_file;
   $dest_file_name = ($filter) ? filterFileName($dest_file_name) : $dest_file_name;
   $ok = 0;
   if (!file_exists($image_dest) || !is_dir($image_dest))
   {
-		$oldumask = umask(0);
+		$oldumask = umask(0022);
 		$result = _mkdir($image_dest);
-        @chmod($image_dest, CHMOD_DIRS);
 		umask($oldumask);
   }
   switch ($type) {
   case 1: // overwrite mode
     if (file_exists($image_src."/".$image_media_file)) {
-      if (file_exists($image_dest."/".$dest_file_name)) {
-        unlink($image_dest."/".$dest_file_name);
+      $dest_path = $image_dest."/".$dest_file_name;
+      if (strpos(realpath(dirname($dest_path)), realpath($image_dest)) !== 0) {
+        return false;
       }
-      $ok = copy($image_src."/".$image_media_file, $image_dest."/".$dest_file_name);
+      if (file_exists($dest_path)) {
+        unlink($dest_path);
+      }
+      $ok = copy($image_src."/".$image_media_file, $dest_path);
     }
     break;
 
@@ -140,7 +171,11 @@ function copy_file($image_src, $image_dest, $image_media_file, $dest_file_name, 
          $n++;
        }
        $new_file = $file_name.$copy.".".$file_extension;
-       $ok = copy($image_src."/".$image_media_file, $image_dest."/".$new_file);
+       $dest_path = $image_dest."/".$new_file;
+       if (strpos(realpath(dirname($dest_path)), realpath($image_dest)) !== 0) {
+         return false;
+       }
+       $ok = copy($image_src."/".$image_media_file, $dest_path);
        $dest_file_name = $new_file;
      }
      break;
@@ -148,11 +183,15 @@ function copy_file($image_src, $image_dest, $image_media_file, $dest_file_name, 
    case 3: // do nothing if exists, highest protection
    default:
      if (file_exists($image_src."/".$image_media_file)) {
-       if (file_exists($image_dest."/".$dest_file_name)) {
+       $dest_path = $image_dest."/".$dest_file_name;
+       if (strpos(realpath(dirname($dest_path)), realpath($image_dest)) !== 0) {
+         return false;
+       }
+       if (file_exists($dest_path)) {
          $ok = 0;
        }
        else {
-         $ok = copy($image_src."/".$image_media_file, $image_dest."/".$dest_file_name);
+         $ok = copy($image_src."/".$image_media_file, $dest_path);
        }
      }
      break;
@@ -163,7 +202,7 @@ function copy_file($image_src, $image_dest, $image_media_file, $dest_file_name, 
     {
       @unlink($image_src_file);
     }
-    @chmod($image_dest."/".$dest_file_name, CHMOD_FILES);
+    @chmod($image_dest."/".$dest_file_name, 0644);
     return $dest_file_name;
   }
   else {
@@ -376,9 +415,9 @@ function show_form_header($phpscript, $action = "", $name = "formular", $uploadf
   else {
     $upload = "";
   }
-  echo "<form action=\"".$site_sess->url(safe_htmlspecialchars(strip_tags($phpscript)))."\"".$upload." name=\"".$name."\" method=\"post\">\n";
+  echo "<form action=\"".$site_sess->url(safe_htmlspecialchars(strip_tags($phpscript)))."\"".$upload." name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\" method=\"post\">\n";
   if ($action != "") {
-    echo "<input type=\"hidden\" name=\"action\" value=\"".$action."\">\n";
+    echo "<input type=\"hidden\" name=\"action\" value=\"".htmlspecialchars($action, ENT_QUOTES, 'UTF-8')."\">\n";
   }
 }
 
@@ -406,14 +445,14 @@ function show_custom_row($title, $value) {
 
 function show_num_select_row($title, $option, $desc = "") {
   global $site_sess, $PHP_SELF, $action, $$option;
-  echo "<tr class=\"".get_row_bg()."\">\n<td><p>".$title."</p></td>\n";
-  echo "<td align=\"right\"><p>".$desc;
-  $url = addslashes(str_replace('"', '&quot;', $PHP_SELF));
+  echo "<tr class=\"".get_row_bg()."\">\n<td><p>".htmlspecialchars($title, ENT_QUOTES, 'UTF-8')."</p></td>\n";
+  echo "<td align=\"right\"><p>".htmlspecialchars($desc, ENT_QUOTES, 'UTF-8');
+  $url = htmlspecialchars($PHP_SELF, ENT_QUOTES, 'UTF-8');
   $url .= preg_match("/\?/", $url) ? "&amp;" : "?";
-  $url .= "action=".$action;
+  $url .= "action=".htmlspecialchars($action, ENT_QUOTES, 'UTF-8');
   $url = $site_sess->url($url);
   echo "<select name=\"num\" onchange=\"window.location=('".$url."&";
-  echo $option."='+this.options[this.selectedIndex].value)\">\n";
+  echo htmlspecialchars($option, ENT_QUOTES, 'UTF-8')."='+this.options[this.selectedIndex].value)\">\n";
   for ($i = 1; $i < 11; $i++) {
     echo "<option value=\"$i\"";
     if ($i == ${$option}) {
@@ -435,8 +474,8 @@ function show_upload_row($title, $name, $extra = "", $value = "") {
 
   echo "<tr class=\"".get_row_bg()."\" valign='top'>\n<td><p class=\"rowtitle\">$title</p></td>\n";
   echo "<td><p>";
-  echo "<b>Upload:</b><br><input type=\"file\" name=\"".$name."\"><br>";
-  echo "<b>URL:</b><br><input type=\"text\" name=\"remote_".$name."\" value=\"".$value."\" size=\"".$textinput_size."\">";
+  echo "<b>Upload:</b><br><input type=\"file\" name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\"><br>";
+  echo "<b>URL:</b><br><input type=\"text\" name=\"remote_".$name."\" value=\"".htmlspecialchars($value, ENT_QUOTES, 'UTF-8')."\" size=\"".$textinput_size."\">";
   echo $extra."</p></td>\n</tr>\n";
 }
 
@@ -450,7 +489,7 @@ function show_image_row($title, $src, $border = 0, $delete_box = "", $height = 0
     $dimension .= " width=\"".$width."\"";
   }
   echo "<tr class=\"".get_row_bg()."\" valign='top'>\n<td><p class=\"rowtitle\">".$title."</p></td>\n";
-  echo "<td><img src=\"".$src."\"".$dimension." border=\"".$border."\" alt=\"\">";
+  echo "<td><img src=\"".htmlspecialchars($src, ENT_QUOTES, 'UTF-8')."\"".$dimension." border=\"".$border."\" alt=\"\">";
   if ($delete_box != "") {
     $checked = '';
     if (isset($_POST[$delete_box]) && $_POST[$delete_box] == 1) {
@@ -472,12 +511,12 @@ function show_radio_row($title, $name, $value = 1) {
   }
   echo "<tr class=\"".get_row_bg()."\">\n";
   echo "<td><p class=\"rowtitle\">".$title."</p></td>\n<td><p>";
-  echo "<input type=\"radio\" name=\"$name\" value=\"1\"";
+  echo "<input type=\"radio\" name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\" value=\"1\"";
   if ($value == 1) {
     echo " checked=\"checked\"";
   }
   echo "> ".$lang['yes']."&nbsp;&nbsp;&nbsp;\n";
-  echo "<input type=\"radio\" name=\"".$name."\" value=\"0\"";
+  echo "<input type=\"radio\" name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\" value=\"0\"";
   if ($value != 1) {
     echo " checked=\"checked\"";
   }
@@ -494,7 +533,7 @@ function show_input_row($title, $name, $value = "", $size = "") {
   if (isset($_POST[$name])/* && $value == ""*/) {
     $value = stripslashes($_POST[$name]);
   }
-  echo "<tr class=\"".get_row_bg()."\">\n<td><p class=\"rowtitle\">".$title."</p></td>\n<td><p><input type=\"text\" size=\"".$size."\" name=\"".$name."\" value=\"".format_text($value, 2)."\"></p></td>\n</tr>\n";
+  echo "<tr class=\"".get_row_bg()."\">\n<td><p class=\"rowtitle\">".$title."</p></td>\n<td><p><input type=\"text\" size=\"".$size."\" name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\" value=\"".format_text($value, 2)."\"></p></td>\n</tr>\n";
 }
 
 function show_date_input_row($title, $name, $value = "", $size = "") {
@@ -507,7 +546,7 @@ function show_date_input_row($title, $name, $value = "", $size = "") {
     $value = stripslashes($_POST[$name]);
   }
 
-  echo "<tr class=\"".get_row_bg()."\">\n<td><p class=\"rowtitle\">".$title."</p></td>\n<td><input type=\"text\" size=\"".$size."\" name=\"".$name."\" id=\"".$name."\" value=\"".format_text($value, 2)."\"> ";
+  echo "<tr class=\"".get_row_bg()."\">\n<td><p class=\"rowtitle\">".$title."</p></td>\n<td><input type=\"text\" size=\"".$size."\" name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\" id=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\" value=\"".format_text($value, 2)."\"> ";
   echo get_calendar_js($name, $value);
   echo "</td>\n</tr>\n";
 }
@@ -521,7 +560,7 @@ function show_textarea_row($title, $name, $value = "", $cols = "", $rows = 10) {
   if (isset($_POST[$name])/* && $value == ""*/) {
     $value = stripslashes($_POST[$name]);
   }
-  echo "<tr class=\"".get_row_bg()."\" valign=\"top\">\n<td><p class=\"rowtitle\">".$title."</p></td>\n<td><p><textarea name=\"".$name."\" rows=\"".$rows."\" cols=\"".$cols."\">".format_text($value, 2)."</textarea></p></td>\n</tr>\n";
+  echo "<tr class=\"".get_row_bg()."\" valign=\"top\">\n<td><p class=\"rowtitle\">".$title."</p></td>\n<td><p><textarea name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\" rows=\"".$rows."\" cols=\"".$cols."\">".format_text($value, 2)."</textarea></p></td>\n</tr>\n";
 }
 
 function show_user_select_row($title, $user_id, $i = 0) {
@@ -559,7 +598,7 @@ function show_user_select_row($title, $user_id, $i = 0) {
     if ($key == $user_id) {
       echo " selected=\"selected\"";
     }
-    echo ">".format_text($val, 2)."</option>\n";
+    echo ">".htmlspecialchars(format_text($val, 2), ENT_QUOTES, 'UTF-8')."</option>\n";
   }
   echo "</select>\n";
   echo "</td>\n</tr>\n";
@@ -571,13 +610,13 @@ function show_cat_select_row($title, $cat_id, $admin = 0, $i = 0) {
     $title = sprintf("<span class=\"marktext\">%s *</span>", $title);
   }
   if (isset($_POST['cat_parent_id'])) {
-    $cat_id = $_POST['cat_parent_id'];
+    $cat_id = intval($_POST['cat_parent_id']);
   }
   elseif (isset($_POST['cat_id_'.$i])) {
-    $cat_id = $_POST['cat_id_'.$i];
+    $cat_id = intval($_POST['cat_id_'.$i]);
   }
   elseif (isset($_POST['cat_id'])) {
-    $cat_id = $_POST['cat_id'];
+    $cat_id = intval($_POST['cat_id']);
   }
   echo "<tr class=\"".get_row_bg()."\">\n<td><p class=\"rowtitle\">".$title."</p></td>\n<td>".get_category_dropdown($cat_id, 0, $admin, $i)."</td>\n</tr>\n";
 }
@@ -591,7 +630,7 @@ function show_userlevel_select_row($title, $name = "user_level", $userlevel = ""
     $userlevel = stripslashes($_POST[$name]);
   }
   echo "<tr class=\"".get_row_bg()."\">\n<td><p class=\"rowtitle\">".$title."</p></td>\n<td>\n";
-  echo "<select name=".$name.">\n";
+  echo "<select name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\">\n";
   echo "<option value=\"".GUEST."\"";
   if ($userlevel == GUEST || $userlevel == "") {
     echo " selected=\"selected\"";
@@ -619,7 +658,7 @@ function show_hidden_input($name, $value = "", $htmlise = 1) {
   if ($htmlise) {
     $value = format_text($value, 2);
   }
-  echo "<input type=\"hidden\" name=\"$name\" value=\"".$value."\">\n";
+  echo "<input type=\"hidden\" name=\"".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."\" value=\"".htmlspecialchars($value, ENT_QUOTES, 'UTF-8')."\">\n";
 }
 
 function show_text_link($text, $url, $newwin = 0) {
@@ -662,12 +701,22 @@ function check_admin_date($date) {
 function get_dir_size($dir) {
   $size = 0;
   $dir = (!preg_match("#/$#", $dir)) ? $dir."/" : $dir;
+  
+  // Path traversal protection
+  if (strpos($dir, '..') !== false) {
+    return 0;
+  }
+  
   $handle = @opendir($dir);
+  if (!$handle) {
+    return 0;
+  }
   while ($file = @readdir($handle)) {
-    if (preg_match("/^\.{1,2}$/",$file)) {
+    if (preg_match("/^\.{1,2}$/",$file) || strpos($file, '..') !== false) {
       continue;
     }
-    $size += (is_dir($dir.$file)) ? get_dir_size($dir.$file."/") : filesize($dir.$file);
+    $filepath = $dir.basename($file);
+    $size += (is_dir($filepath)) ? get_dir_size($filepath."/") : filesize($filepath);
   }
   @closedir($handle);
   return $size;

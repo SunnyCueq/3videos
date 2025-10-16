@@ -87,6 +87,21 @@ function send_file($file_name, $file_path) {
   @readfile($file_path);
 }
 
+function cleanup_and_exit($error_msg = '', $redirect_url = '') {
+  global $site_db;
+  if ($error_msg) {
+    error_log('Download Error: ' . str_replace(["\r\n", "\r", "\n"], ' ', $error_msg));
+  }
+  if (isset($site_db) && is_object($site_db)) {
+    @$site_db->close();
+  }
+  @session_write_close();
+  if ($redirect_url) {
+    redirect($redirect_url);
+  }
+  exit(1);
+}
+
 $file = array();
 $file_path = null;
 $file_name = null;
@@ -151,7 +166,8 @@ if ($action == "lightbox") {
       }
 
       $zipfile->send(time().".zip");
-      exit;
+      @session_write_close();
+      exit(0);
     }
     else {
       redirect("lightbox.php?empty=1");
@@ -180,9 +196,8 @@ elseif ($image_id) {
     }
 
     if (!check_download_token($image_row['image_id'])) {
-      echo "Hotlinking is not allowed";
-	  exit;
-	  redirect("index.php");
+      error_log('Download Error: Hotlinking attempt for image_id ' . $image_row['image_id']);
+      cleanup_and_exit('Hotlinking not allowed', 'index.php');
     }
   }
 
@@ -240,17 +255,16 @@ elseif ($image_id) {
     } else {
         send_file($file['file_name'], $file['file_path']);
     }
-    exit;
+    @session_write_close();
+    exit(0);
   }
   else {
-    echo $lang['download_error']."\n<!-- EMPTY FILE PATH //-->";
-    exit;
+    cleanup_and_exit('Empty file path for image_id: ' . $image_id, 'index.php');
   }
 }
 else {
-  echo $lang['download_error']."\n<!-- NO ACTION SPECIFIED //-->";
-  exit;
+  cleanup_and_exit('No action specified', 'index.php');
 }
 
-exit;
+exit(0);
 ?>

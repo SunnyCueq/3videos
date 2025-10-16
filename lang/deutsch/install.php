@@ -21,7 +21,7 @@
  *************************************************************************/
 
 $lang['start_install'] = "Installation starten";
-$lang['start_install_desc'] = "Tragen Sie hier Ihre Zugangsdaten für Ihren Datenbank Server ein und wählen Sie einen Usernamen und ein Passwort für den Administrator.";
+$lang['start_install_desc'] = "Tragen Sie hier Ihre Zugangsdaten für Ihren Datenbank Server ein und wählen Sie einen Usernamen und Zugangsdaten für den Administrator.";
 $lang['lostfield_error'] = "Bitte überprüfen Sie die markierten Felder!";
 
 $lang['db'] = "Datenbank";
@@ -29,17 +29,17 @@ $lang['db_servertype'] = "Datenbank Servertyp";
 $lang['db_host'] = "Datenbank Host";
 $lang['db_name'] = "Datenbank Name";
 $lang['db_user'] = "Datenbank Username";
-$lang['db_password'] = "Datenbank Passwort";
+$lang['db_password'] = "Datenbank Zugangsdaten";
 $lang['table_prefix'] = "Präfix für die Tabellen";
 
 $lang['admin'] = "Administrator";
 $lang['admin_user'] = "Administrator Username";
-$lang['admin_password'] = "Administrator Passwort";
-$lang['admin_password2'] = "Administrator Passwort (Bestätigung)";
+$lang['admin_password'] = "Administrator Zugangsdaten";
+$lang['admin_password2'] = "Administrator Zugangsdaten (Bestätigung)";
 
 $lang['database_error'] = "Es sind Fehler bei der Erstellung der Datenbankeinträge aufgetreten:";
 $lang['install_success'] = "Die Installation war erfolgreich!";
-$lang['install_success_login'] = "Ihr Administrator Benutzername und Passwort wurde erstellt. Die Basis Konfiguration ist nun beendet. Sie können sich jetzt in Ihren Administrationsbereich einloggen und weitere Einstellungen vornehmen.<br /><b>&raquo; <a href=\"".ROOT_PATH."admin/index.php\">Zum Administrationsbereich</a></b>";
+$lang['install_success_login'] = "Ihr Administrator Benutzername und Zugangsdaten wurden erstellt. Die Basis Konfiguration ist nun beendet. Sie können sich jetzt in Ihren Administrationsbereich einloggen und weitere Einstellungen vornehmen.<br /><b>&raquo; <a href=\"".ROOT_PATH."admin/index.php\">Zum Administrationsbereich</a></b>";
 $lang['config_download'] = "Konfigurations-Datei downloaden";
 $lang['config_download_desc'] = "Die Konfigurations-Datei \"config.php\" konnte nicht direkt auf dem Server gespeichert werden. Bitte laden Sie sich die Datei herunter und übertragen Sie diese ins Hauptverzeichnis der Galerie auf Ihrem Web-Server. Danach können Sie sich in Ihren Administrationsbereich einloggen und weitere Einstellungen vornehmen.";
 $lang['timezone_select'] = "Bitte wählen Sie Ihre Zeitzone";

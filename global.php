@@ -22,7 +22,7 @@
 
 
 if (!defined('ROOT_PATH')) {
-    die("Security violation");
+    throw new RuntimeException('Security violation: ROOT_PATH not defined');
 }
 $start_time = microtime();
 
@@ -39,10 +39,14 @@ if (!function_exists("date_default_timezone_set")) {
     }
 }
 
-function addslashes_array($array)
+function sanitize_array($array)
 {
     foreach ($array as $key => $val) {
-        $array[$key] = (is_array($val)) ? addslashes_array($val) : addslashes($val);
+        if (is_array($val)) {
+            $array[$key] = sanitize_array($val);
+        } else {
+            $array[$key] = htmlspecialchars($val, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
     }
     return $array;
 }
@@ -54,12 +58,12 @@ $_ENV    = $_ENV;
 
 if (isset($_GET['GLOBALS']) || isset($_POST['GLOBALS']) || isset($_COOKIE['GLOBALS']) || isset($_FILES['GLOBALS'])) {
     // Try to exploit PHP bug
-    die("Security violation");
+    throw new RuntimeException('Security violation: GLOBALS manipulation attempt');
 }
 
-$_GET    = addslashes_array($_GET);
-$_POST   = addslashes_array($_POST);
-$_COOKIE = addslashes_array($_COOKIE);
+$_GET    = sanitize_array($_GET);
+$_POST   = sanitize_array($_POST);
+$_COOKIE = sanitize_array($_COOKIE);
 
 $search_match_fields = null;
 $search_index_types = null;
@@ -126,7 +130,9 @@ $csrf_protection_expires     = 7200;
 $csrf_protection_name        = '__csrf';
 $csrf_protection_xhtml       = 1;
 
-@include(ROOT_PATH.'config.php');
+if (file_exists(ROOT_PATH.'config.php') && is_readable(ROOT_PATH.'config.php')) {
+    include(ROOT_PATH.'config.php');
+}
 
 if (!$cache_enable) {
     $cache_page_index      = 0;
@@ -143,9 +149,15 @@ if (!$captcha_enable) {
 }
 
 // Include default languages
-@include_once(ROOT_PATH.'lang/english/main.php');
-include_once(ROOT_PATH.'includes/constants.php');
-include_once(ROOT_PATH.'includes/functions.php');
+if (file_exists(ROOT_PATH.'lang/english/main.php')) {
+    include_once(ROOT_PATH.'lang/english/main.php');
+}
+if (file_exists(ROOT_PATH.'includes/constants.php')) {
+    include_once(ROOT_PATH.'includes/constants.php');
+}
+if (file_exists(ROOT_PATH.'includes/functions.php')) {
+    include_once(ROOT_PATH.'includes/functions.php');
+}
 
 function clean_string($string)
 {
@@ -374,13 +386,19 @@ if (defined("SCRIPT_URL") && SCRIPT_URL != "") {
 
 // Check if we should redirect to the installation routine
 if (!defined("4IMAGES_ACTIVE")) {
-    redirect("install.php");
+    header('Location: install.php');
+    exit;
 }
 
 //-----------------------------------------------------
 //--- Start DB ----------------------------------------
 //-----------------------------------------------------
-include_once(ROOT_PATH.'includes/db_'.strtolower($db_servertype).'.php');
+$db_file = ROOT_PATH.'includes/db_'.preg_replace('/[^a-z]/', '', strtolower($db_servertype)).'.php';
+if (file_exists($db_file) && is_readable($db_file)) {
+    include_once($db_file);
+} else {
+    throw new RuntimeException('Database driver not found');
+}
 $site_db = new Db($db_host, $db_user, $db_password, $db_name);
 
 //-----------------------------------------------------
@@ -414,42 +432,50 @@ define('ICON_PATH', ROOT_PATH.TEMPLATE_DIR."/".$config['template_dir']."/icons")
 //-----------------------------------------------------
 //--- Templates ---------------------------------------
 //-----------------------------------------------------
-include_once(ROOT_PATH.'includes/template.php');
+if (file_exists(ROOT_PATH.'includes/template.php')) {
+    include_once(ROOT_PATH.'includes/template.php');
+} else {
+    throw new RuntimeException('Template system not found');
+}
 $site_template = new Template(TEMPLATE_PATH);
 
 $config['language_dir_default'] = $config['language_dir'];
 $l = null;
 if (isset($_GET['l']) || isset($_POST['l'])) {
     $requested_l = (isset($_GET['l'])) ? trim($_GET['l']) : trim($_POST['l']);
-    if (!preg_match('#\.\.[\\\/]#', $requested_l) && $requested_l != $config['language_dir'] && file_exists(ROOT_PATH.'lang/'.$requested_l.'/main.php')) {
+    $requested_l = preg_replace('/[^a-z_]/', '', $requested_l);
+    if ($requested_l && $requested_l != $config['language_dir'] && file_exists(ROOT_PATH.'lang/'.$requested_l.'/main.php')) {
         $l = $requested_l;
         $config['language_dir'] = $l;
     }
 }
 
-include_once(ROOT_PATH.'lang/'.$config['language_dir'].'/main.php');
-include_once(ROOT_PATH."includes/db_field_definitions.php");
-include_once(ROOT_PATH.'includes/auth.php');
+$lang_file = ROOT_PATH.'lang/'.preg_replace('/[^a-z_]/', '', $config['language_dir']).'/main.php';
+if (file_exists($lang_file) && is_readable($lang_file)) {
+    include_once($lang_file);
+}
+if (file_exists(ROOT_PATH.'includes/db_field_definitions.php')) {
+    include_once(ROOT_PATH.'includes/db_field_definitions.php');
+}
+if (file_exists(ROOT_PATH.'includes/auth.php')) {
+    include_once(ROOT_PATH.'includes/auth.php');
+}
 
 //-----------------------------------------------------
 //--- Security ----------------------------------------
 //-----------------------------------------------------
-include_once(ROOT_PATH.'includes/security_utils.php');
-
-//-----------------------------------------------------
-//--- Cache -------------------------------------------
-//-----------------------------------------------------
-include_once(ROOT_PATH.'includes/cache_utils.php');
-
-//-----------------------------------------------------
-//--- CAPTCHA -----------------------------------------
-//-----------------------------------------------------
-include_once(ROOT_PATH.'includes/captcha_utils.php');
-
-//-----------------------------------------------------
-//--- CSRF protection ---------------------------------
-//-----------------------------------------------------
-include_once(ROOT_PATH.'includes/csrf_utils.php');
+if (file_exists(ROOT_PATH.'includes/security_utils.php')) {
+    include_once(ROOT_PATH.'includes/security_utils.php');
+}
+if (file_exists(ROOT_PATH.'includes/cache_utils.php')) {
+    include_once(ROOT_PATH.'includes/cache_utils.php');
+}
+if (file_exists(ROOT_PATH.'includes/captcha_utils.php')) {
+    include_once(ROOT_PATH.'includes/captcha_utils.php');
+}
+if (file_exists(ROOT_PATH.'includes/csrf_utils.php')) {
+    include_once(ROOT_PATH.'includes/csrf_utils.php');
+}
 
 //-----------------------------------------------------
 //--- GZip Compression --------------------------------
@@ -474,9 +500,15 @@ if ($config['gz_compress'] == 1 && !isset($nozip)) {
 if (defined("GET_CACHES")) {
     $config['cat_order'] = empty($config['cat_order']) ? 'cat_order, cat_name' : $config['cat_order'];
     $config['cat_sort']  = empty($config['cat_sort']) ? 'ASC' : $config['cat_sort'];
+    // Validate sort parameters to prevent SQL injection
+    $allowed_orders = ['cat_order', 'cat_name', 'cat_id'];
+    $allowed_sorts = ['ASC', 'DESC'];
+    $order_by = in_array($config['cat_order'], $allowed_orders) ? $config['cat_order'] : 'cat_order';
+    $sort_dir = in_array(strtoupper($config['cat_sort']), $allowed_sorts) ? strtoupper($config['cat_sort']) : 'ASC';
+    
     $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
           FROM ".CATEGORIES_TABLE."
-          ORDER BY ".$config['cat_order']." " .$config['cat_sort'];
+          ORDER BY {$order_by} {$sort_dir}";
     $result = $site_db->query($sql);
 
     while ($row = $site_db->fetch_array($result)) {
@@ -491,7 +523,7 @@ if (defined("GET_CACHES")) {
 
     $sql = "SELECT cat_id, COUNT(image_id) AS new_images
           FROM ".IMAGES_TABLE."
-          WHERE image_active = 1 AND image_date >= $new_cutoff
+          WHERE image_active = 1 AND image_date >= ".$new_cutoff."
           GROUP BY cat_id";
     $result = $site_db->query($sql);
 

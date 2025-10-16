@@ -44,8 +44,10 @@ if (!empty($additional_image_fields)) {
 $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_description, i.image_keywords, i.image_date, i.image_active, i.image_media_file, i.image_thumb_file, i.image_download_url, i.image_allow_comments, i.image_comments, i.image_downloads, i.image_votes, i.image_rating, i.image_hits".$additional_sql.", c.cat_name".get_user_table_field(", u.", "user_name").get_user_table_field(", u.", "user_email")."
         FROM (".IMAGES_TABLE." i,  ".CATEGORIES_TABLE." c)
         LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = i.user_id)
-        WHERE i.image_id = $image_id AND i.image_active = 1 AND c.cat_id = i.cat_id";
-$image_row = $site_db->query_firstrow($sql);
+        WHERE i.image_id = ? AND i.image_active = 1 AND c.cat_id = i.cat_id";
+$stmt = $site_db->prepare($sql);
+$stmt->execute([$image_id]);
+$image_row = $stmt->fetch(PDO::FETCH_ASSOC);
 $cat_id = (isset($image_row['cat_id'])) ? $image_row['cat_id'] : 0;
 $is_image_owner = ($image_row['user_id'] > USER_AWAITING && $user_info['user_id'] == $image_row['user_id']) ? 1 : 0;
 
@@ -255,8 +257,10 @@ if ($action == "postcomment" && isset($_POST[URL_ID])) {
   $id = intval($_POST[URL_ID]);
   $sql = "SELECT cat_id, image_allow_comments
           FROM ".IMAGES_TABLE."
-          WHERE image_id = $id";
-  $row = $site_db->query_firstrow($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$id]);
+  $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
   if ($row['image_allow_comments'] == 0 || !check_permission("auth_postcomment", $row['cat_id']) || !$row) {
     $msg = $lang['comments_deactivated'];
@@ -271,10 +275,12 @@ if ($action == "postcomment" && isset($_POST[URL_ID])) {
     // Flood Check
     $sql = "SELECT comment_ip, comment_date
             FROM ".COMMENTS_TABLE."
-            WHERE image_id = $id
+            WHERE image_id = ?
             ORDER BY comment_date DESC
             LIMIT 1";
-    $spam_row = $site_db->query_firstrow($sql);
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$id]);
+    $spam_row = $stmt->fetch(PDO::FETCH_ASSOC);
     $spamtime = $spam_row['comment_date'] + 180;
 
     if ($session_info['session_ip'] == $spam_row['comment_ip'] && time() <= $spamtime && $user_info['user_level'] != ADMIN)  {
@@ -311,8 +317,9 @@ if ($action == "postcomment" && isset($_POST[URL_ID])) {
       $sql = "INSERT INTO ".COMMENTS_TABLE."
               (image_id, user_id, user_name, comment_headline, comment_text, comment_ip, comment_date)
               VALUES
-              ($id, ".$user_info['user_id'].", '$user_name', '$comment_headline', '$comment_text', '".$session_info['session_ip']."', ".time().")";
-      $site_db->query($sql);
+              (?, ?, ?, ?, ?, ?, ?)";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([$id, $user_info['user_id'], $user_name, $comment_headline, $comment_text, $session_info['session_ip'], time()]);
       $commentid = $site_db->get_insert_id();
       update_comment_count($id, $user_info['user_id']);
       $msg = $lang['comment_success'];
@@ -344,9 +351,11 @@ if ($image_allow_comments == 1) {
   $sql = "SELECT c.comment_id, c.image_id, c.user_id, c.user_name AS comment_user_name, c.comment_headline, c.comment_text, c.comment_ip, c.comment_date".get_user_table_field(", u.", "user_level").get_user_table_field(", u.", "user_name").get_user_table_field(", u.", "user_email").get_user_table_field(", u.", "user_showemail").get_user_table_field(", u.", "user_invisible").get_user_table_field(", u.", "user_joindate").get_user_table_field(", u.", "user_lastaction").get_user_table_field(", u.", "user_comments").get_user_table_field(", u.", "user_homepage").get_user_table_field(", u.", "user_icq")."
           FROM ".COMMENTS_TABLE." c
           LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = c.user_id)
-          WHERE c.image_id = $image_id
+          WHERE c.image_id = ?
           ORDER BY c.comment_date ASC";
-  $result = $site_db->query($sql);
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$image_id]);
+  $result = $stmt;
 
   $comment_row = array();
   while ($row = $site_db->fetch_array($result)) {
@@ -518,8 +527,9 @@ $site_template->register_vars("admin_links", $admin_links);
 if ($user_info['user_level'] != ADMIN) {
   $sql = "UPDATE ".IMAGES_TABLE."
           SET image_hits = image_hits + 1
-          WHERE image_id = $image_id";
-  $site_db->query($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$image_id]);
 }
 
 //-----------------------------------------------------

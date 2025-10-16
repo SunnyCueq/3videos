@@ -150,14 +150,14 @@ $lang['top_image_votes'] = "10 Bilder mit den meisten Bewertungen";
 //-----------------------------------------------------
 //--- Users -------------------------------------------
 //-----------------------------------------------------
-$lang['send_password_emailsubject'] = "Passwortanforderung bei {site_name}";  // Subject für E-Mail bei Passwortanforderung
-$lang['update_email_emailsubject'] = "E-Mail-Änderung bei {site_name}";       // Subject für E-Mail mit Aktivierungs-Link bei geänderter E-Mail-Adresse
-$lang['register_success_emailsubject'] = "Registrierung bei {site_name}";     // Subject für E-Mail mit Aktivierungs-Link
-$lang['admin_activation_emailsubject'] = "Account Aktivierung";               // Subject für E-Mail mit Aktivierungs-Link für den Admin
-$lang['activation_success_emailsubject'] = "Ihr Account wurde aktiviert";     // Subject für E-Mail nach Account Aktivierung durch den Admin (Registrierung und E-Mail-Wechsel)
+$lang['send_password_emailsubject'] = "Zugangsdaten-Anforderung bei {site_name}";
+$lang['update_email_emailsubject'] = "E-Mail-Änderung bei {site_name}";
+$lang['register_success_emailsubject'] = "Registrierung bei {site_name}";
+$lang['admin_activation_emailsubject'] = "Account Aktivierung";
+$lang['activation_success_emailsubject'] = "Ihr Account wurde aktiviert";
 
 $lang['no_permission'] = "Sie sind nicht angemeldet oder haben nicht die erforderlichen Rechte für diese Seite!";
-$lang['already_registered'] = "Es wurde festgestellt, dass Sie bereits registrierter Benutzer sind. Wenn Sie Ihr Passwort vergessen haben klicken Sie bitte <a href=\"{url_lost_password}\">hier</a>.";
+$lang['already_registered'] = "Es wurde festgestellt, dass Sie bereits registrierter Benutzer sind. Wenn Sie Ihre Zugangsdaten vergessen haben klicken Sie bitte <a href=\"{url_lost_password}\">hier</a>.";
 $lang['username_exists'] = "Es existiert bereits ein User mit diesem Usernamen.";
 $lang['email_exists'] = "Es existiert bereits ein User mit dieser E-Mail-Adresse.";
 $lang['invalid_email_format'] = "Bitte geben Sie eine gültige E-Mail-Adresse an.";
@@ -168,24 +168,24 @@ $lang['missing_activationkey'] = "Es wurde kein Aktivierungs-Key übergeben.";
 $lang['invalid_activationkey'] = "Dieser Account ist nicht mehr aktiv. Bitte registrieren Sie sich erneut.</>";
 $lang['activation_success'] = "Vielen Dank! Ihr Account wurde erfolgreich aktiviert. Sie können sich nun einloggen.";
 $lang['general_error'] = "Es ist ein Fehler aufgetreten. Bitte gehen Sie <a href=javascript:history.go(-1)>zurück</a> und versuchen es erneut. Sollte das Problem längerfristig auftreten, wenden Sie sich bitte an den Administrator.";
-$lang['invalid_login'] = "Es existiert kein Benutzer mit diesem Benutzernamen und Passwort";
+$lang['invalid_login'] = "Es existiert kein Benutzer mit diesem Benutzernamen und diesen Zugangsdaten";
 $lang['update_email_error'] = "Bitte tragen Sie Ihre E-Mail-Adresse zweimal ein!";
 $lang['update_email_confirm_error'] = "Ihre beiden E-Mail-Adressen stimmen nicht überein!";
 $lang['update_profile_success'] = "Ihr Profil wurde erfolgreich aktualisiert!";
 $lang['update_email_instruction'] = "Da Sie Ihre E-Mail-Adresse geändert haben, muss Ihr Account neu aktiviert werden. Der Aktivierungskey wurde an die neue E-Mail-Adresse gendet!";
 $lang['update_email_instruction_admin'] = "Da Sie Ihre E-Mail-Adresse geändert haben, muss Ihr Account durch den Administrator neu aktiviert werden. Sie erhalten eine E-Mail sobald dies geschehen ist.";
 $lang['invalid_email'] = "Es ist kein Benutzer mit dieser E-Mail-Adresse vorhanden.";
-$lang['send_password_success'] = "Ihr Passwort wurde Ihnen zugesendet.";
-$lang['update_password_error'] = "Sie haben Ihr aktuelles Passwort falsch eingegeben.";
-$lang['update_password_confirm_error'] = "Ihre beiden neuen Passworte stimmen nicht überein!";
-$lang['update_password_success'] = "Ihr Passwort wurde erfolgreich geändert.";
+$lang['send_password_success'] = "Ihre Zugangsdaten wurden Ihnen zugesendet.";
+$lang['update_password_error'] = "Sie haben Ihre aktuellen Zugangsdaten falsch eingegeben.";
+$lang['update_password_confirm_error'] = "Ihre beiden neuen Zugangsdaten stimmen nicht überein!";
+$lang['update_password_success'] = "Ihre Zugangsdaten wurden erfolgreich geändert.";
 $lang['invalid_user_id'] = "Kein Benutzer gefunden!";
 $lang['emailuser_success'] = "Die E-Mail wurde erfolgreich versendet";
 $lang['send_email_to'] = "E-Mail versenden an:";
 $lang['subject'] = "Betreff:";
 $lang['message'] = "Nachricht:";
 $lang['profile_of'] = "Profil von:";
-$lang['edit_profile_msg'] = "Hier können Sie Ihr persönliches Profil und Ihr Passwort ändern.";
+$lang['edit_profile_msg'] = "Hier können Sie Ihr persönliches Profil und Ihre Zugangsdaten ändern.";
 $lang['edit_profile_email_msg'] = "<br />Beachten Sie bitte: Bei Änderung der E-Mail-Adresse muss Ihr Account neu aktiviert werden. Der Aktivierungskey wird an die neue E-Mail-Adresse gesendet.";
 $lang['edit_profile_email_msg_admin'] = "<br />Beachten Sie bitte: Bei Änderung der E-Mail-Adresse muss Ihr Account durch den Administrator neu aktiviert werden.";
 $lang['join_date'] = "Registriert seit:";
@@ -198,14 +198,14 @@ $lang['show_email'] = "E-Mail-Adresse anzeigen:";
 $lang['allow_emails'] = "E-Mails von Administratoren erhalten:";
 $lang['invisible'] = "Online-Status verstecken:";
 $lang['optional_infos'] = "Freiwillige Angaben";
-$lang['change_password'] = "Passwort ändern";
-$lang['old_password'] = "Altes Passwort:";
-$lang['new_password'] = "Neues Passwort:";
-$lang['new_password_confirm'] = "Neues Passwort wiederholen:";
-$lang['lost_password'] = "Passwort vergessen";
-$lang['lost_password_msg'] = "Sollten Sie Ihr Passwort vergessen haben, können Sie hier ein neues anfordern. Geben Sie einfach in das Textfeld Ihre E-Mail-Adresse ein mit der Sie sich registriert haben.";
+$lang['change_password'] = "Zugangsdaten ändern";
+$lang['old_password'] = "Alte Zugangsdaten:";
+$lang['new_password'] = "Neue Zugangsdaten:";
+$lang['new_password_confirm'] = "Neue Zugangsdaten wiederholen:";
+$lang['lost_password'] = "Zugangsdaten vergessen";
+$lang['lost_password_msg'] = "Sollten Sie Ihre Zugangsdaten vergessen haben, können Sie hier neue anfordern. Geben Sie einfach in das Textfeld Ihre E-Mail-Adresse ein mit der Sie sich registriert haben.";
 $lang['user_name'] = "Benutzername:";
-$lang['password'] = "Passwort:";
+$lang['password'] = "Zugangsdaten:";
 
 $lang['register_msg'] = "Bitte füllen Sie alle Felder komplett aus. Sie benötigen eine gültige E-Mail-Adresse da dorthin der Aktivierungslink für Ihren Account gesendet wird.";
 $lang['agreement'] = "Nutzungsbedingungen:";
@@ -320,7 +320,7 @@ $lang['registered_user'] = "Registrierte Benutzer";
 $lang['logout'] = "Abmelden";
 $lang['login'] = "Anmelden";
 $lang['lang_auto_login'] = "Beim nächsten Besuch automatisch anmelden?";
-$lang['lost_password'] = "Password vergessen";
+$lang['lost_password'] = "Zugangsdaten vergessen";
 $lang['random_image'] = "Zufallsbild";
 $lang['site_stats'] = "<b>{total_images}</b> Bilder in <b>{total_categories}</b> Kategorien.";
 $lang['lang_loggedin_msg'] = "Eingeloggt als: <b>{loggedin_user_name}</b>";

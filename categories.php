@@ -42,7 +42,7 @@ $cache_id = create_cache_id(
     $cat_id,
     $page,
     $perpage,
-    isset($user_info['lightbox_image_ids']) ? substr(md5($user_info['lightbox_image_ids']), 0, 8) : 0,
+    isset($user_info['lightbox_image_ids']) ? substr(hash('sha256', $user_info['lightbox_image_ids']), 0, 8) : 0,
     $config['template_dir'],
     $config['language_dir']
   ]
@@ -124,10 +124,12 @@ if (!empty($additional_image_fields)) {
 $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_description, i.image_keywords, i.image_date, i.image_active, i.image_media_file, i.image_thumb_file, i.image_download_url, i.image_allow_comments, i.image_comments, i.image_downloads, i.image_votes, i.image_rating, i.image_hits".$additional_sql.", c.cat_name".get_user_table_field(", u.", "user_name")."
         FROM (".IMAGES_TABLE." i,  ".CATEGORIES_TABLE." c)
         LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = i.user_id)
-        WHERE i.image_active = 1 AND i.cat_id = $cat_id AND c.cat_id = i.cat_id
+        WHERE i.image_active = 1 AND i.cat_id = ? AND c.cat_id = i.cat_id
         ORDER BY ".$config['image_order']." ".$config['image_sort'].", i.image_id ".$config['image_sort']."
-        LIMIT $offset, $perpage";
-$result = $site_db->query($sql);
+        LIMIT ?, ?";
+$stmt = $site_db->prepare($sql);
+$stmt->execute([$cat_id, $offset, $perpage]);
+$result = $stmt;
 $num_rows = $site_db->get_numrows($result);
 
 if (!$num_rows)  {
@@ -203,8 +205,9 @@ echo $content;
 if ($user_info['user_level'] != ADMIN && $page == 1) {
   $sql = "UPDATE ".CATEGORIES_TABLE."
           SET cat_hits = cat_hits + 1
-          WHERE cat_id = $cat_id";
-  $site_db->query($sql);
+          WHERE cat_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$cat_id]);
 }
 
 include(ROOT_PATH.'includes/page_footer.php');

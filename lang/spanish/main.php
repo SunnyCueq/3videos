@@ -150,14 +150,14 @@ $lang['top_image_votes'] = "Top 5 imágenes por votos";
 //-----------------------------------------------------
 //--- Usuarios ----------------------------------------
 //-----------------------------------------------------
-$lang['send_password_emailsubject'] = "Envío de contraseña de {site_name}";  // Mail subject for password.
-$lang['update_email_emailsubject'] = "Actualizar Email de {site_name}";      // Mail subject for activation code when changing email address
-$lang['register_success_emailsubject'] = "Registro en {site_name}";          // Mail subject for activation code
-$lang['admin_activation_emailsubject'] = "Cuenta Activada";                  // Mail subject for account activation by admin.
-$lang['activation_success_emailsubject'] = "Cuenta Activada";                // Mail subject after account activation by admin.
+$lang['send_password_emailsubject'] = "Envío de credenciales de {site_name}";
+$lang['update_email_emailsubject'] = "Actualizar Email de {site_name}";
+$lang['register_success_emailsubject'] = "Registro en {site_name}";
+$lang['admin_activation_emailsubject'] = "Cuenta Activada";
+$lang['activation_success_emailsubject'] = "Cuenta Activada";
 
 $lang['no_permission'] = "¡No ha iniciado sesión aquí, o bien no tiene permiso para entrar en este sitio!";
-$lang['already_registered'] = "¡Usted ya está registrado. Si ha perdido su contraseña, por favor haga lcick <a href=\"{url_lost_password}\">aquí</a>.";
+$lang['already_registered'] = "¡Usted ya está registrado. Si ha perdido su clave, por favor haga lcick <a href=\"{url_lost_password}\">aquí</a>.";
 $lang['username_exists'] = "El nombre de usuario ya está registrado.";
 $lang['email_exists'] = "La dirección de correo ya está registrada.";
 $lang['invalid_email_format'] = "Por favor, introduzca una dirección de correo válida.";
@@ -165,27 +165,27 @@ $lang['register_success'] = "Ahora estas registrado. En breve recibiras un email
 $lang['register_success_admin'] = "Ahora estas registrado. Su cuenta ha sido desactivada, el administrador debe activarla antes de acceder. Recibira una notificacion una vez que sea activada.";
 $lang['register_success_none'] = "Ahora estas registrado. Por favor identifiquese.";
 $lang['missing_activationkey'] = "Su código de activación no se encuentra.";
-$lang['invalid_activationkey'] = "Cuenta inactiva. Por favor, regístrese de nuevo.</>";
+$lang['invalid_activationkey'] = "Cuenta inactiva. Por favor, regístrese de nuevo.";
 $lang['activation_success'] = "¡Gracias! Su cuenta ha sido activada. Por favor, inicie una sesión.";
 $lang['general_error'] = "Ha habido un error. Por favor <a href=javascript:history.go(-1)>vuelva atrás</a> e inténtelo de nuevo. Si el problema persiste, contacte con el administrador.";
-$lang['invalid_login'] = "Ha indicando un nombre de usuario o password inválido.";
+$lang['invalid_login'] = "Ha indicando un nombre de usuario o clave inválida.";
 $lang['update_email_error'] = "¡Por favor, introduzca su correo de nuevo!";
 $lang['update_email_confirm_error'] = "¡Las direcciones de correo que ha introducido no se corresponden!";
 $lang['update_profile_success'] = "¡Su perfil ha sido actualizado!";
 $lang['update_email_instruction'] = "Una vez modificado su correo, debe reactivar su cuenta. El código de activación ha sido enviado a su nueva dirección de correo";
 $lang['update_email_admin_instruction'] = "Como su correo electrónico ha cambiado, el administrador necesita reactivar su cuenta. Recibira una notificacion de reactivacion de su cuenta en breve.";
 $lang['invalid_email'] = "Correo incorrecto.";
-$lang['send_password_success'] = "Su contraseña ha sido remitida a su dirección de correo.";
+$lang['send_password_success'] = "Su clave ha sido remitida a su dirección de correo.";
 $lang['update_password_error'] = "¡Ha introducido un Email incorrecto!";
-$lang['update_password_confirm_error'] = "¡Las dos contraseñas que ha tecleado no son iguales!";
-$lang['update_password_success'] = "Su contraseña ha sido modificada.";
+$lang['update_password_confirm_error'] = "¡Las dos claves que ha tecleado no son iguales!";
+$lang['update_password_success'] = "Su clave ha sido modificada.";
 $lang['invalid_user_id'] = "¡No se encuentra usuario!";
 $lang['emailuser_success'] = "El correo ha sido enviado";
 $lang['send_email_to'] = "Enviar correo a:";
 $lang['subject'] = "Asunto:";
 $lang['message'] = "Mensaje:";
 $lang['profile_of'] = "Perfil de usuario de:";
-$lang['edit_profile_msg'] = "Se le permite modificar su perfil y su contraseña.";
+$lang['edit_profile_msg'] = "Se le permite modificar su perfil y su clave.";
 $lang['edit_profile_email_msg'] = "<br />Nota: si usted cambia su dirección de correo, debe reactivar su cuenta. Se le enviaría un código de activación a su nueva dirección.";
 $lang['edit_profile_email_msg_admin'] = "<br />Nota: Si cambia su correo electrónico el administrador tendra que reactivar su cuenta.";
 $lang['join_date'] = "Fecha de alta:";
@@ -198,14 +198,14 @@ $lang['show_email'] = "Mostrar mi dirección de correo:";
 $lang['allow_emails'] = "Reciba los email de administradores:";
 $lang['invisible'] = "Ocultar su presencia en línea:";
 $lang['optional_infos'] = "Opcional";
-$lang['change_password'] = "Cambiar contraseña";
-$lang['old_password'] = "Vieja contraseña:";
-$lang['new_password'] = "Nueva contraseña:";
-$lang['new_password_confirm'] = "Confirmar nueva contraseña:";
-$lang['lost_password'] = "Introduzca contraseña de nuevo";
-$lang['lost_password_msg'] = "En caso de haber perdido su contraseña, introduzca la dirección de correo que utilizó para registrarse.";
+$lang['change_password'] = "Cambiar clave";
+$lang['old_password'] = "Vieja clave:";
+$lang['new_password'] = "Nueva clave:";
+$lang['new_password_confirm'] = "Confirmar nueva clave:";
+$lang['lost_password'] = "Introduzca clave de nuevo";
+$lang['lost_password_msg'] = "En caso de haber perdido su clave, introduzca la dirección de correo que utilizó para registrarse.";
 $lang['user_name'] = "Usuario:";
-$lang['password'] = "Contraseña:";
+$lang['password'] = "Clave:";
 
 $lang['register_msg'] = "Por favor, rellene todos los campos. Introduzca una dirección de correo válida para poder proporcionarle su código de activación.";
 $lang['agreement'] = "Condiciones del registro:";
@@ -327,7 +327,7 @@ $lang['registered_user'] = "Usuarios registrados";
 $lang['logout'] = "Cerrar Sesión";
 $lang['login'] = "Iniciar Sesión";
 $lang['lang_auto_login'] = "¿Iniciar sesión automáticamente en la siguiente visita?";
-$lang['lost_password'] = "Contraseña olvidada";
+$lang['lost_password'] = "Clave olvidada";
 $lang['random_image'] = "Imagen aleatoria";
 $lang['site_stats'] = "<b>{total_images}</b> imágenes en <b>{total_categories}</b> categorías.";
 $lang['lang_loggedin_msg'] = "Inicio de sesión como: <b>{loggedin_user_name}</b>";

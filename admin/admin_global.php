@@ -20,10 +20,15 @@
  *                                                                        *
  *************************************************************************/
 if (!defined('ROOT_PATH')) {
-    die("Security violation");
+    error_log('Security violation: ROOT_PATH not defined');
+    http_response_code(403);
+    exit(1);
 }
 
 define('GET_CACHES', 1);
+if (!file_exists(ROOT_PATH.'global.php') || !is_readable(ROOT_PATH.'global.php')) {
+    throw new RuntimeException('Required file not accessible');
+}
 include_once(ROOT_PATH.'global.php');
 include_once(ROOT_PATH.'includes/sessions.php');
 include_once(ROOT_PATH.'admin/admin_functions.php');
@@ -57,12 +62,20 @@ if ($goto != "") {
 $newlangfile = 0;
 if (!file_exists(ROOT_PATH.'lang/'.$config['language_dir'].'/admin.php')) {
     $old_language_dir = $config['language_dir'];
-    $handle = opendir(ROOT_PATH.'lang/');
+    $lang_path = realpath(ROOT_PATH.'lang/');
+    if ($lang_path === false || strpos($lang_path, '..') !== false) {
+        throw new RuntimeException('Invalid language path');
+    }
+    $handle = opendir($lang_path);
     while ($folder = @readdir($handle)) {
-        if (is_dir(ROOT_PATH."/lang/".$folder) && $folder != "." && $folder != "..") {
-            unset($config['language_dir']);
-            $config['language_dir'] = $folder;
-            $newlangfile = 1;
+        $folder = basename($folder);
+        if ($folder != "." && $folder != ".." && strpos($folder, '..') === false) {
+            $folder_path = $lang_path."/".$folder;
+            if (is_dir($folder_path) && strpos(realpath($folder_path), $lang_path) === 0) {
+                unset($config['language_dir']);
+                $config['language_dir'] = $folder;
+                $newlangfile = 1;
+            }
         }
     }
     closedir($handle);
@@ -71,13 +84,19 @@ if (!file_exists(ROOT_PATH.'lang/'.$config['language_dir'].'/admin.php')) {
         show_admin_header();
         echo "<p>".$lang['admin_no_lang']."</p>";
         show_admin_footer();
-        exit;
+        throw new RuntimeException('Language pack not found');
     }
 }
 
 // Include default languages
-@include_once(ROOT_PATH.'lang/english/admin.php');
-include_once(ROOT_PATH.'lang/'.$config['language_dir'].'/admin.php');
+$english_admin = ROOT_PATH.'lang/english/admin.php';
+$config_admin = ROOT_PATH.'lang/'.$config['language_dir'].'/admin.php';
+if (strpos($english_admin, '..') === false && file_exists($english_admin)) {
+    @include_once($english_admin);
+}
+if (strpos($config_admin, '..') === false && file_exists($config_admin)) {
+    include_once($config_admin);
+}
 
 if (strstr(getenv("HTTP_USER_AGENT"), "MSIE")) { // Browser Detection
     $textinput_size = "50";
@@ -91,7 +110,14 @@ if (strstr(getenv("HTTP_USER_AGENT"), "MSIE")) { // Browser Detection
 
 if (isset($_GET['logout'])) {
     $site_sess->logout($user_info['user_id']);
-    setcookie("adminon", 0, 0, '/');
+    $options = [
+        'expires' => 0,
+        'path' => '/',
+        'httponly' => true,
+        'secure' => isset($_SERVER['HTTPS']),
+        'samesite' => 'Strict'
+    ];
+    setcookie("adminon", 0, $options);
     redirect("index.php");
 }
 
@@ -105,7 +131,14 @@ if (isset($_POST['loginusername']) && isset($_POST['loginpassword'])) {
 
 if (defined('ADMIN_SAFE_LOGIN') && ADMIN_SAFE_LOGIN == 1) {
     if ($user_info['user_level'] != GUEST && $user_info['user_level'] == ADMIN && isset($_POST['loginusername'])) {
-        setcookie("adminon", 1, 0, '/');
+        $options = [
+            'expires' => 0,
+            'path' => '/',
+            'httponly' => true,
+            'secure' => isset($_SERVER['HTTPS']),
+            'samesite' => 'Strict'
+        ];
+        setcookie("adminon", 1, $options);
         $_COOKIE['adminon'] = 1;
     } else {
         if ($user_info['user_level'] == GUEST || $user_info['user_level'] == USER || $user_info['user_level'] == USER_AWAITING) {
@@ -117,7 +150,14 @@ if (defined('ADMIN_SAFE_LOGIN') && ADMIN_SAFE_LOGIN == 1) {
         $user_info['user_level'] = GUEST;
     } else {
         if ($user_info['user_level'] != GUEST  && $user_info['user_level'] == ADMIN && isset($_POST['loginusername'])) {
-            setcookie("adminon", 1, 0, '/');
+            $options = [
+                'expires' => 0,
+                'path' => '/',
+                'httponly' => true,
+                'secure' => isset($_SERVER['HTTPS']),
+                'samesite' => 'Strict'
+            ];
+            setcookie("adminon", 1, $options);
             $_COOKIE['adminon'] = 1;
         }
     }

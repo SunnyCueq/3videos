@@ -60,8 +60,9 @@ if ($action == "register") {
     if ($config['activation_time'] != 0) {
       $expiry = time() - 60 * 60 * 24 * $config['activation_time'];
       $sql = "DELETE FROM ".USERS_TABLE."
-              WHERE (".get_user_table_field("", "user_lastaction")." < $expiry) AND ".get_user_table_field("", "user_level")." = ".USER_AWAITING;
-      $site_db->query($sql);
+              WHERE (".get_user_table_field("", "user_lastaction")." < ?) AND ".get_user_table_field("", "user_level")." = ?";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([$expiry, USER_AWAITING]);
     }
   }
   $user_name = (isset($_POST['user_name'])) ? un_htmlspecialchars(trim($_POST['user_name'])) : "";
@@ -81,8 +82,10 @@ if ($action == "register") {
     if ($user_name != "") {
       $sql = "SELECT ".get_user_table_field("", "user_name")."
               FROM ".USERS_TABLE."
-              WHERE ".get_user_table_field("", "user_name")." = '".strtolower($user_name)."'";
-      if ($site_db->not_empty($sql)) {
+              WHERE ".get_user_table_field("", "user_name")." = ?";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([strtolower($user_name)]);
+      if ($stmt->rowCount() > 0) {
         $msg .= (($msg != "") ? "<br />" : "").$lang['username_exists'];
         $error = 1;
       }
@@ -101,8 +104,10 @@ if ($action == "register") {
       if (check_email($user_email)) {
         $sql = "SELECT ".get_user_table_field("", "user_email")."
                 FROM ".USERS_TABLE."
-                WHERE ".get_user_table_field("", "user_email")." = '".strtolower($user_email)."'";
-        if ($site_db->not_empty($sql)) {
+                WHERE ".get_user_table_field("", "user_email")." = ?";
+        $stmt = $site_db->prepare($sql);
+        $stmt->execute([strtolower($user_email)]);
+        if ($stmt->rowCount() > 0) {
           $msg .= (($msg != "") ? "<br />" : "").$lang['email_exists'];
           $error = 1;
         }
@@ -138,13 +143,13 @@ if ($action == "register") {
 
   if (!$error) {
     $additional_field_sql = "";
-    $additional_value_sql = "";
+    $additional_params = [];
     if (!empty($additional_user_fields)) {
       $table_fields = $site_db->get_table_fields(USERS_TABLE);
       foreach ($additional_user_fields as $key => $val) {
         if (isset($_POST[$key]) && isset($table_fields[$key])) {
           $additional_field_sql .= ", $key";
-          $additional_value_sql .= ", '".un_htmlspecialchars(trim($_POST[$key]))."'";
+          $additional_params[] = un_htmlspecialchars(trim($_POST[$key]));
         }
       }
     }
@@ -153,12 +158,15 @@ if ($action == "register") {
 
     $current_time = time();
     $user_level = ($config['account_activation'] == 0) ? USER : USER_AWAITING;
-    $user_password_hashed = salted_hash($user_password);
+    $user_password_hashed = password_hash($user_password, PASSWORD_ARGON2ID);
+    $placeholders = str_repeat(', ?', count($additional_params));
     $sql = "INSERT INTO ".USERS_TABLE."
             (".get_user_table_field("", "user_id").get_user_table_field(", ", "user_level").get_user_table_field(", ", "user_name").get_user_table_field(", ", "user_password").get_user_table_field(", ", "user_email").get_user_table_field(", ", "user_showemail").get_user_table_field(", ", "user_allowemails").get_user_table_field(", ", "user_invisible").get_user_table_field(", ", "user_joindate").get_user_table_field(", ", "user_activationkey").get_user_table_field(", ", "user_lastaction").get_user_table_field(", ", "user_lastvisit").get_user_table_field(", ", "user_comments").get_user_table_field(", ", "user_homepage").get_user_table_field(", ", "user_icq").$additional_field_sql.")
             VALUES
-            ($user_id, $user_level, '$user_name', '$user_password_hashed', '$user_email', $user_showemail, $user_allowemails, $user_invisible, $current_time, '$activationkey', $current_time, $current_time, 0, '$user_homepage', '$user_icq'".$additional_value_sql.")";
-    $result = $site_db->query($sql);
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?".$placeholders.")";
+    $stmt = $site_db->prepare($sql);
+    $params = array_merge([$user_id, $user_level, $user_name, $user_password_hashed, $user_email, $user_showemail, $user_allowemails, $user_invisible, $current_time, $activationkey, $current_time, $current_time, 0, $user_homepage, $user_icq], $additional_params);
+    $result = $stmt->execute($params);
 
     if ($result) {
       $activation_url = $script_url."/register.php?action=activate&activationkey=".$activationkey;
@@ -299,8 +307,9 @@ if ($action == "activate") {
   if ($config['activation_time'] != 0) {
     $expiry = time() - 60 * 60 * 24 * $config['activation_time'];
     $sql = "DELETE FROM ".USERS_TABLE."
-            WHERE (".get_user_table_field("", "user_lastaction")." < $expiry) AND ".get_user_table_field("", "user_level")." = ".USER_AWAITING;
-    $site_db->query($sql);
+            WHERE (".get_user_table_field("", "user_lastaction")." < ?) AND ".get_user_table_field("", "user_level")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$expiry, USER_AWAITING]);
   }
   if (!isset($_GET['activationkey'])){
     $msg = $lang['missing_activationkey'];
@@ -313,16 +322,19 @@ if ($action == "activate") {
     $activationkey = trim($_GET['activationkey']);
     $sql = "SELECT ".get_user_table_field("", "user_name").get_user_table_field(", ", "user_email").get_user_table_field(", ", "user_activationkey")."
             FROM ".USERS_TABLE."
-            WHERE ".get_user_table_field("", "user_activationkey")." = '$activationkey'";
-    $row = $site_db->query_firstrow($sql);
+            WHERE ".get_user_table_field("", "user_activationkey")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$activationkey]);
+    $row = $stmt->fetch();
     if (!$row) {
       $msg = $lang['invalid_activationkey'];
     }
     else {
       $sql = "UPDATE ".USERS_TABLE."
-              SET ".get_user_table_field("", "user_level")." = ".USER."
-              WHERE ".get_user_table_field("", "user_activationkey")." = '$activationkey'";
-      $site_db->query($sql);
+              SET ".get_user_table_field("", "user_level")." = ?
+              WHERE ".get_user_table_field("", "user_activationkey")." = ?";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([USER, $activationkey]);
       $msg = $lang['activation_success'];
 
       if ($config['account_activation'] == 2) {

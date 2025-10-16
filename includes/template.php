@@ -20,7 +20,7 @@
  *                                                                        *
  *************************************************************************/
 if (!defined('ROOT_PATH')) {
-    die("Security violation");
+    throw new Exception("Security violation");
 }
 
 class Template
@@ -73,8 +73,17 @@ class Template
     public function get_template($template)
     {
         if (!isset($this->template_cache[$template])) {
+            $template = basename($template);
+            if (!preg_match('/^[a-zA-Z0-9_-]+$/', $template)) {
+                throw new Exception("Invalid template name");
+            }
             $path = $this->template_path."/".$template.".".$this->template_extension;
-            $line = @file_get_contents($path);
+            $real_path = realpath($path);
+            $real_template_path = realpath($this->template_path);
+            if (!$real_path || !$real_template_path || strpos($real_path, $real_template_path) !== 0) {
+                throw new Exception("Invalid template path");
+            }
+            $line = @file_get_contents($real_path);
             if (empty($line)) {
                 $this->error("Couldn't open Template ".$path, 1);
             }
@@ -100,8 +109,17 @@ class Template
 
         extract($this->val_cache);
         ob_start();
-        //echo $template;
-        eval("?>".$template."<?php return 1;");
+        $temp_file = tempnam(sys_get_temp_dir(), 'tpl_');
+        if ($temp_file === false) {
+            throw new Exception("Failed to create temporary file");
+        }
+        chmod($temp_file, 0600);
+        if (file_put_contents($temp_file, $template, LOCK_EX) === false) {
+            @unlink($temp_file);
+            throw new Exception("Failed to write temporary file");
+        }
+        include $temp_file;
+        @unlink($temp_file);
 
         $str = ob_get_contents();
         ob_end_clean();
@@ -243,6 +261,11 @@ class Template
         $item = $this->start.$item.$this->end;
     }
 
+    private function sanitize_log_message($message)
+    {
+        return str_replace(["\r\n", "\r", "\n", "\t"], [' ', ' ', ' ', ' '], $message);
+    }
+
     public function print_template($template)
     {
         if (strpos($template, $this->start.'header'.$this->end) !== false) {
@@ -279,13 +302,24 @@ class Template
     {
         if (!$this->no_error) {
             global $user_info;
-            //if (isset($user_info['user_level']) && $user_info['user_level'] == ADMIN){
-            echo "<br /><font color='#FF0000'><b>Template Error</b></font>: ".$errmsg."<br />";
-            /*} else {
-              echo "<br /><font color='#FF0000'><b>An unexpected error occured. Please try again later.</b></font><br />";
-            }*/
+            $safe_log_msg = $this->sanitize_log_message($errmsg);
+            
+            if (defined('IN_CP') && IN_CP == 1) {
+                error_log("Template Error: " . $safe_log_msg);
+                echo "<br /><font color='#FF0000'><b>Template Error</b></font>: ".htmlspecialchars($errmsg, ENT_QUOTES, 'UTF-8')."<br />";
+            } elseif (isset($user_info['user_level']) && $user_info['user_level'] == ADMIN) {
+                error_log("Template Error: " . $safe_log_msg);
+                echo "<br /><font color='#FF0000'><b>Template Error</b></font>: ".htmlspecialchars($errmsg, ENT_QUOTES, 'UTF-8')."<br />";
+            } else {
+                error_log("Template Error: " . $safe_log_msg);
+                echo "<br /><font color='#FF0000'><b>An unexpected error occurred. Please try again later.</b></font><br />";
+            }
+            
             if ($halt) {
-                exit;
+                if (defined('IN_CP') && IN_CP == 1) {
+                    exit(1);
+                }
+                throw new Exception("Template error occurred");
             }
         }
     }

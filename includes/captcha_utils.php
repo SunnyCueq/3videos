@@ -30,7 +30,28 @@ $captcha_length = max((int)$captcha_length, 1);
 $captcha_width  = max((int)$captcha_width, 1);
 $captcha_height = max((int)$captcha_height, 1);
 
-srand((double)microtime()*1000000);
+function secure_random_int($min, $max) {
+    if (function_exists('random_int')) {
+        return random_int($min, $max);
+    }
+    $range = $max - $min + 1;
+    $bytes = (int) (log($range, 2) / 8) + 1;
+    $bits = (int) log($range, 2) + 1;
+    $filter = (int) (1 << $bits) - 1;
+    do {
+        $rnd = hexdec(bin2hex(openssl_random_pseudo_bytes($bytes)));
+        $rnd = $rnd & $filter;
+    } while ($rnd >= $range);
+    return $min + $rnd;
+}
+
+function secure_array_rand($array) {
+    if (empty($array)) {
+        return null;
+    }
+    $keys = array_keys($array);
+    return $keys[secure_random_int(0, count($keys) - 1)];
+}
 
 function captcha_validate($code)
 {
@@ -108,7 +129,7 @@ function captcha_get_text_system($code)
 
     $image = imagecreatetruecolor($captcha_width, $captcha_height);
 
-    $text_font = rand(1, 5);
+    $text_font = secure_random_int(1, 5);
     $text_width = imagefontwidth($text_font) * strlen($code);
     $text_height = imagefontheight($text_font);
     $margin = $text_width * 0.3;
@@ -170,9 +191,9 @@ function captcha_get_text($code)
         imagettftext(
             $image,
             $captcha_text_size,
-            rand(-30, 30),
+            secure_random_int(-30, 30),
             $x,
-            $captcha_text_size + rand(10, 20),
+            $captcha_text_size + secure_random_int(10, 20),
             $text_color,
             captcha_get_font(),
             $code[$i]
@@ -193,7 +214,7 @@ function captcha_filter_image($image)
 {
     global $captcha_path, $captcha_text_color, $captcha_text_size, $captcha_width, $captcha_height;
 
-    $width_extra  = rand(10, 15);
+    $width_extra  = secure_random_int(10, 15);
     $image_filtered = imagecreatetruecolor($captcha_width+$width_extra, $captcha_height+$width_extra);
 
     $dstX = 0;
@@ -204,7 +225,7 @@ function captcha_filter_image($image)
     $srcY = 0;
     $srcW = $width_extra;
     $srcH = $captcha_width - 2 * $width_extra;
-    $h = rand(5, 10);
+    $h = secure_random_int(5, 10);
 
     for ($i = 0; $i < $captcha_width; $i++) {
         imagecopyresized(
@@ -242,7 +263,7 @@ function captcha_get_font()
         closedir($res);
     }
 
-    $font = array_rand($files);
+    $font = secure_array_rand($files);
 
     return $files[$font];
 }
@@ -265,7 +286,7 @@ function captcha_get_background()
         closedir($res);
     }
 
-    $bg   = array_rand($files);
+    $bg   = secure_array_rand($files);
     $info = getimagesize($files[$bg]);
 
     $image = null;
@@ -317,10 +338,10 @@ function captcha_get_code_from_string($str, $length = 5)
     }
 
     $code = '';
-    srand((double)microtime()*1000000);
+    $str_len = strlen($str);
 
     while (strlen($code) < $length) {
-        $code .= $str[mt_rand(0, strlen($str)-1)];
+        $code .= $str[secure_random_int(0, $str_len - 1)];
     }
 
     return $code;
@@ -334,8 +355,8 @@ function captcha_get_code_from_file($file)
         $files[$file] = file($file);
     }
 
-    srand((double)microtime()*1000000);
-    return $files[$file][array_rand($files[$file])];
+    $index = secure_array_rand($files[$file]);
+    return $files[$file][$index];
 }
 
 function captcha_hex2rgb($color)

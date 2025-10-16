@@ -66,6 +66,15 @@ class Db
         }
     }
 
+    public function prepare($query)
+    {
+        if (!$stmt = mysqli_prepare($this->connection, $query)) {
+            $this->error("<b>Bad SQL Prepare</b>: ".safe_htmlspecialchars($query)."<br /><b>".safe_htmlspecialchars(mysqli_error($this->connection))."</b>");
+            return false;
+        }
+        return new PreparedStatement($stmt, $this);
+    }
+
     public function query($query = "")
     {
         unset($this->query_result);
@@ -91,7 +100,7 @@ class Db
         }
     }
 
-    public function fetch_array(mysqli_result $query_result = null, $assoc = 0)
+    public function fetch_array(?mysqli_result $query_result = null, $assoc = 0)
     {
         if ($query_result != null) {
             $this->query_result = $query_result;
@@ -101,7 +110,7 @@ class Db
         }
     }
 
-    public function free_result(mysqli_result $query_result = null)
+    public function free_result(?mysqli_result $query_result = null)
     {
         if ($query_result != null) {
             $this->query_result = $query_result;
@@ -121,7 +130,7 @@ class Db
         return $result;
     }
 
-    public function get_numrows(mysqli_result $query_result = null)
+    public function get_numrows(?mysqli_result $query_result = null)
     {
         if ($query_result != null) {
             $this->query_result = $query_result;
@@ -146,7 +155,7 @@ class Db
         }
     }
 
-    public function get_numfields(mysqli_result $query_result = null)
+    public function get_numfields(?mysqli_result $query_result = null)
     {
         if ($query_result != null) {
             $this->query_result = $query_result;
@@ -154,7 +163,7 @@ class Db
         return @mysqli_num_fields($this->query_result);
     }
 
-    public function get_fieldname($offset, mysqli_result $query_result = null)
+    public function get_fieldname($offset, ?mysqli_result $query_result = null)
     {
         if ($query_result != null) {
             $this->query_result = $query_result;
@@ -164,7 +173,7 @@ class Db
         return $finfo->name;
     }
 
-    public function get_fieldtype($offset, mysqli_result $query_result = null)
+    public function get_fieldtype($offset, ?mysqli_result $query_result = null)
     {
         if ($query_result != null) {
             $this->query_result = $query_result;
@@ -223,3 +232,53 @@ class Db
         }
     }
 } // end of class
+
+class PreparedStatement
+{
+    private $stmt;
+    private $db;
+    private $result;
+
+    public function __construct($stmt, $db)
+    {
+        $this->stmt = $stmt;
+        $this->db = $db;
+    }
+
+    public function execute($params = [])
+    {
+        if (!empty($params)) {
+            $types = str_repeat('s', count($params));
+            mysqli_stmt_bind_param($this->stmt, $types, ...$params);
+        }
+        
+        if (!mysqli_stmt_execute($this->stmt)) {
+            $this->db->error("<b>Statement Execute Error</b>: ".mysqli_stmt_error($this->stmt));
+            return false;
+        }
+        
+        $this->result = mysqli_stmt_get_result($this->stmt);
+        return true;
+    }
+
+    public function fetch($mode = MYSQLI_BOTH)
+    {
+        if ($this->result) {
+            return mysqli_fetch_array($this->result, $mode);
+        }
+        return false;
+    }
+
+    public function rowCount()
+    {
+        return mysqli_stmt_num_rows($this->stmt);
+    }
+
+    public function close()
+    {
+        if ($this->result) {
+            mysqli_free_result($this->result);
+        }
+        mysqli_stmt_close($this->stmt);
+    }
+}
