@@ -20,6 +20,9 @@
  *                                                                        *
  *************************************************************************/
 
+
+declare(strict_types=1);
+
 $main_template = 'search';
 
 define('GET_CACHES', 1);

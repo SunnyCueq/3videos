@@ -20,6 +20,9 @@
  *                                                                        *
  *************************************************************************/
 
+
+declare(strict_types=1);
+
 $permission_select_type = "checkbox"; // choose "checkbox", "select" or "radio"
 
 define('IN_CP', 1);

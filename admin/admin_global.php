@@ -19,6 +19,9 @@
  *    (Licence.txt) for further information.                              *
  *                                                                        *
  *************************************************************************/
+
+declare(strict_types=1);
+
 if (!defined('ROOT_PATH')) {
     error_log('Security violation: ROOT_PATH not defined');
     http_response_code(403);

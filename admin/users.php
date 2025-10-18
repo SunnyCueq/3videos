@@ -20,6 +20,9 @@
  *                                                                        *
  *************************************************************************/
 
+
+declare(strict_types=1);
+
 define('IN_CP', 1);
 define('ROOT_PATH', './../');
 require('admin_global.php');
@@ -259,13 +262,25 @@ if ($action == "updateuser") {
   if ($user_level == GUEST) {
     $error['user_level'] = 1;
   }
-  if ($user_name != "" && strtolower($current['user_name']) != strtolower(stripslashes($user_name)) && $site_db->not_empty("SELECT ".get_user_table_field("", "user_name")." FROM ".USERS_TABLE." WHERE ".get_user_table_field("", "user_name")." = '".strtolower($user_name)."'")) {
-    $msg .= sprintf("%s: <b>%s</b><br />", $lang['user_name_exists'], format_text($user_name, 2));
-    $error['user_name'] = 1;
+  // ✅ Modernized: Use Prepared Statement
+  if ($user_name != "" && strtolower($current['user_name']) != strtolower(stripslashes($user_name))) {
+    $sql = "SELECT ".get_user_table_field("", "user_name")." FROM ".USERS_TABLE." WHERE ".get_user_table_field("", "user_name")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([strtolower($user_name)]);
+    if ($site_db->get_numrows($stmt->result) > 0) {
+      $msg .= sprintf("%s: <b>%s</b><br />", $lang['user_name_exists'], format_text($user_name, 2));
+      $error['user_name'] = 1;
+    }
   }
-  if ($user_email != "" && strtolower($current['user_email']) != strtolower($user_email) && $site_db->not_empty("SELECT ".get_user_table_field("", "user_email")." FROM ".USERS_TABLE." WHERE ".get_user_table_field("", "user_email")." = '".strtolower($user_email)."'")) {
-    $msg .= sprintf("%s: <b>%s</b><br />", $lang['user_email_exists'], $user_email);
-    $error['user_email'] = 1;
+  // ✅ Modernized: Use Prepared Statement
+  if ($user_email != "" && strtolower($current['user_email']) != strtolower($user_email)) {
+    $sql = "SELECT ".get_user_table_field("", "user_email")." FROM ".USERS_TABLE." WHERE ".get_user_table_field("", "user_email")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([strtolower($user_email)]);
+    if ($site_db->get_numrows($stmt->result) > 0) {
+      $msg .= sprintf("%s: <b>%s</b><br />", $lang['user_email_exists'], $user_email);
+      $error['user_email'] = 1;
+    }
   }
 
   if (!empty($additional_user_fields)) {
@@ -399,13 +414,16 @@ if ($action == "findusers") {
   if ($user_level != GUEST) {
     $condition .= " AND ".get_user_table_field("", "user_level")." = $user_level";
   }
+  // ✅ Modernized: Safe escaping for LIKE queries
   $user_name = trim($_POST['user_name']);
   if ($user_name != "") {
-    $condition .= " AND INSTR(LCASE(".get_user_table_field("", "user_name")."),'".strtolower($user_name)."')>0";
+    $safe_user_name = $site_db->escape_string(strtolower($user_name));
+    $condition .= " AND INSTR(LCASE(".get_user_table_field("", "user_name")."),'$safe_user_name')>0";
   }
   $user_email = trim($_POST['user_email']);
   if ($user_email != "") {
-    $condition .= " AND INSTR(LCASE(".get_user_table_field("", "user_email")."),'".strtolower($user_email)."')>0";
+    $safe_user_email = $site_db->escape_string(strtolower($user_email));
+    $condition .= " AND INSTR(LCASE(".get_user_table_field("", "user_email")."),'$safe_user_email')>0";
   }
   $dateafter = trim($_POST['dateafter']);
   if ($dateafter != "") {
@@ -562,21 +580,27 @@ if ($action == "saveusers") {
       $error['user_level_'.$i] = 1;
     }
 
+        // ✅ Modernized: Use Prepared Statement
     if ($user_name != "") {
       $sql = "SELECT ".get_user_table_field("", "user_name")."
               FROM ".USERS_TABLE."
-              WHERE ".get_user_table_field("", "user_name")." = '".strtolower($user_name)."'";
-      if ($site_db->not_empty($sql)) {
+              WHERE ".get_user_table_field("", "user_name")." = ?";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([strtolower($user_name)]);
+      if ($site_db->get_numrows($stmt->result) > 0) {
         $msg .= sprintf("%s: <b>%s (%s %s)</b><br />", $lang['user_name_exists'], format_text($user_name, 2), $lang['user'], $i);
         $error['user_name_'.$i] = 1;
       }
     }
 
+    // ✅ Modernized: Use Prepared Statement
     if ($user_email != "") {
       $sql = "SELECT ".get_user_table_field("", "user_email")."
               FROM ".USERS_TABLE."
-              WHERE ".get_user_table_field("", "user_email")." = '".strtolower($user_email)."'";
-      if ($site_db->not_empty($sql)) {
+              WHERE ".get_user_table_field("", "user_email")." = ?";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([strtolower($user_email)]);
+      if ($site_db->get_numrows($stmt->result) > 0) {
         $msg .= sprintf("%s: <b>%s (%s %s)</b><br />", $lang['user_email_exists'], $user_email, $lang['user'], $i);
         $error['user_email_'.$i] = 1;
       }

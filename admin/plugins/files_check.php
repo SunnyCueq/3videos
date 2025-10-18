@@ -19,6 +19,9 @@
  *    (Licence.txt) for further information.                              *
  *                                                                        *
  *************************************************************************/
+
+declare(strict_types=1);
+
 $nozip = 1;
 define('IN_CP', 1);
 

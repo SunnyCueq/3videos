@@ -20,6 +20,9 @@
  *                                                                        *
  *************************************************************************/
 
+
+declare(strict_types=1);
+
 $nozip = 1;
 define('IN_CP', 1);
 $root_path = (false === stristr($_SERVER['PHP_SELF'], "/plugins/")) ? "./../" : "./../../";

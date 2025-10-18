@@ -19,6 +19,9 @@
  *    (Licence.txt) for further information.                              *
  *                                                                        *
  *************************************************************************/
+
+declare(strict_types=1);
+
 if (!defined('ROOT_PATH')) {
   throw new RuntimeException('Security violation: ROOT_PATH not defined');
 }

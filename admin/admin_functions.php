@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**************************************************************************
  *                                                                        *
  *    4images - A Web Based Image Gallery Management System               *

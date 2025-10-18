@@ -20,6 +20,9 @@
  *                                                                        *
  *************************************************************************/
 
+
+declare(strict_types=1);
+
 define('IN_CP', 1);
 define('ROOT_PATH', './../');
 $admin_global_path = realpath('admin_global.php');

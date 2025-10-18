@@ -20,6 +20,9 @@
  *                                                                        *
  *************************************************************************/
 
+
+declare(strict_types=1);
+
 define('IN_CP', 1);
 define('ROOT_PATH', './../');
 if (isset($_GET['showthumb']) && !empty($_GET['showthumb']))
