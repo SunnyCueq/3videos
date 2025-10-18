@@ -51,10 +51,13 @@ if ($action == "deletecomment") {
     exit;
   }
 
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT c.comment_id, c.user_id AS comment_user_id, i.image_id, i.cat_id, i.user_id, i.image_name
           FROM (".COMMENTS_TABLE." c, ".IMAGES_TABLE." i)
-          WHERE c.comment_id = $comment_id AND i.image_id = c.image_id";
-  $comment_row = $site_db->query_firstrow($sql);
+          WHERE c.comment_id = ? AND i.image_id = c.image_id";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$comment_id]);
+  $comment_row = $site_db->fetch_array($stmt->result);
   if (!$comment_row || $comment_row['user_id'] <= USER_AWAITING || ($user_info['user_id'] != $comment_row['user_id'] && $user_info['user_level'] != ADMIN)) {
     show_error_page($lang['no_permission']);
     exit;
@@ -63,21 +66,27 @@ if ($action == "deletecomment") {
   $txt_clickstream = get_category_path($comment_row['cat_id'], 1).$config['category_separator']."<a href=\"".$site_sess->url(ROOT_PATH."details.php?".URL_IMAGE_ID."=".$comment_row['image_id'])."\" class=\"clickstream\">".format_text($comment_row['image_name'], 2)."</a>".$config['category_separator'];
   $txt_clickstream .= $lang['comment_delete'];
 
+  // ✅ Modernized: Use Prepared Statement
   $sql = "UPDATE ".IMAGES_TABLE."
           SET image_comments = image_comments - 1
-          WHERE image_id = ".$comment_row['image_id'];
-  $site_db->query($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$comment_row['image_id']]);
 
   if ($comment_row['comment_user_id'] != GUEST) {
+    // ✅ Modernized: Use Prepared Statement
     $sql = "UPDATE ".USERS_TABLE."
             SET ".get_user_table_field("", "user_comments")." = ".get_user_table_field("", "user_comments")." - 1
-            WHERE ".get_user_table_field("", "user_id")." = ".$comment_row['comment_user_id'];
-    $site_db->query($sql);
+            WHERE ".get_user_table_field("", "user_id")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$comment_row['comment_user_id']]);
   }
 
+  // ✅ Modernized: Use Prepared Statement
   $sql = "DELETE FROM ".COMMENTS_TABLE."
-          WHERE comment_id = $comment_id";
-  $result = $site_db->query($sql);
+          WHERE comment_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $result = $stmt->execute([$comment_id]);
   $msg = ($result) ? $lang['comment_delete_success'] : $lang['comment_delete_error'];
 }
 
@@ -86,11 +95,14 @@ if ($action == "removecomment") {
     redirect($url);
   }
 
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT c.comment_id, c.image_id, c.user_id AS comment_user_id, c.user_name AS comment_user_name, c.comment_headline, c.comment_text, i.image_name, i.cat_id, i.user_id".get_user_table_field(", u.", "user_name")."
           FROM (".COMMENTS_TABLE." c, ".IMAGES_TABLE." i)
           LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = c.user_id)
-          WHERE c.comment_id = $comment_id AND i.image_id = c.image_id";
-  $comment_row = $site_db->query_firstrow($sql);
+          WHERE c.comment_id = ? AND i.image_id = c.image_id";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$comment_id]);
+  $comment_row = $site_db->fetch_array($stmt->result);
   if (!$comment_row || $comment_row['user_id'] <= USER_AWAITING || ($user_info['user_id'] != $comment_row['user_id'] && $user_info['user_level'] != ADMIN)) {
     redirect($url);
   }
@@ -130,11 +142,14 @@ if ($action == "updatecomment") {
     show_error_page($lang['no_permission']);
     exit;
   }
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT c.comment_id, c.image_id, i.image_name, i.cat_id, i.user_id".get_user_table_field(", u.", "user_name")."
           FROM (".COMMENTS_TABLE." c, ".IMAGES_TABLE." i)
           LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = c.user_id)
-          WHERE c.comment_id = $comment_id AND i.image_id = c.image_id";
-  $comment_row = $site_db->query_firstrow($sql);
+          WHERE c.comment_id = ? AND i.image_id = c.image_id";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$comment_id]);
+  $comment_row = $site_db->fetch_array($stmt->result);
   if (!$comment_row || $comment_row['user_id'] <= USER_AWAITING || ($user_info['user_id'] != $comment_row['user_id'] && $user_info['user_level'] != ADMIN)) {
     show_error_page($lang['no_permission']);
     exit;
@@ -160,10 +175,12 @@ if ($action == "updatecomment") {
   }
 
   if (!$error) {
+    // ✅ Modernized: Use Prepared Statement
     $sql = "UPDATE ".COMMENTS_TABLE."
-            SET comment_headline = '$comment_headline', comment_text = '$comment_text'
-            WHERE comment_id = $comment_id";
-    $result = $site_db->query($sql);
+            SET comment_headline = ?, comment_text = ?
+            WHERE comment_id = ?";
+    $stmt = $site_db->prepare($sql);
+    $result = $stmt->execute([$comment_headline, $comment_text, $comment_id]);
     $msg = ($result) ? $lang['comment_edit_success'] : $lang['comment_edit_error'];
   }
   else {
@@ -177,11 +194,14 @@ if ($action == "editcomment") {
     redirect($url);
   }
 
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT c.comment_id, c.image_id, c.user_id AS comment_user_id, c.user_name AS comment_user_name, c.comment_headline, c.comment_text, i.image_name, i.cat_id, i.user_id".get_user_table_field(", u.", "user_name")."
           FROM (".COMMENTS_TABLE." c, ".IMAGES_TABLE." i)
           LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = c.user_id)
-          WHERE c.comment_id = $comment_id AND i.image_id = c.image_id";
-  $comment_row = $site_db->query_firstrow($sql);
+          WHERE c.comment_id = ? AND i.image_id = c.image_id";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$comment_id]);
+  $comment_row = $site_db->fetch_array($stmt->result);
   if (!$comment_row || $comment_row['user_id'] <= USER_AWAITING || ($user_info['user_id'] != $comment_row['user_id'] && $user_info['user_level'] != ADMIN)) {
     header("Location: ".$site_sess->url($url, "&"));
     exit;
@@ -239,10 +259,13 @@ if ($action == "deleteimage") {
     show_error_page($lang['no_permission']);
     exit;
   }
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT image_id, cat_id, user_id, image_name, image_media_file, image_thumb_file
           FROM ".IMAGES_TABLE."
-          WHERE image_id = $image_id";
-  $image_row = $site_db->query_firstrow($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$image_id]);
+  $image_row = $site_db->fetch_array($stmt->result);
   if (!$image_row || $image_row['user_id'] <= USER_AWAITING || ($user_info['user_id'] != $image_row['user_id'] && $user_info['user_level'] != ADMIN)) {
     show_error_page($lang['no_permission']);
     exit;
@@ -250,9 +273,11 @@ if ($action == "deleteimage") {
 
   $txt_clickstream = $lang['image_delete'];
 
+  // ✅ Modernized: Use Prepared Statement
   $sql = "DELETE FROM ".IMAGES_TABLE."
-          WHERE image_id = $image_id";
-  $del_img = $site_db->query($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $del_img = $stmt->execute([$image_id]);
 
   if (!is_remote($image_row['image_media_file']) && !is_local_file($image_row['image_media_file'])) {
     @unlink(MEDIA_PATH."/".$image_row['cat_id']."/".$image_row['image_media_file']);
@@ -265,24 +290,30 @@ if ($action == "deleteimage") {
   remove_searchwords($image_id);
 
   if (!empty($user_table_fields['user_comments'])) {
+    // ✅ Modernized: Use Prepared Statement
     $sql = "SELECT user_id
             FROM ".COMMENTS_TABLE."
-            WHERE image_id = $image_id";
-    $result = $site_db->query($sql);
-    $user_id_sql = "";
-    while ($row = $site_db->fetch_array($result)) {
+            WHERE image_id = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$image_id]);
+    
+    while ($row = $site_db->fetch_array($stmt->result)) {
       if ($row['user_id'] != GUEST) {
-        $sql = "UPDATE ".USERS_TABLE."
+        // ✅ Modernized: Use Prepared Statement
+        $sql_update = "UPDATE ".USERS_TABLE."
                 SET ".get_user_table_field("", "user_comments")." = ".get_user_table_field("", "user_comments")." - 1
-                WHERE ".get_user_table_field("", "user_id")." = ".$row['user_id'];
-        $site_db->query($sql);
+                WHERE ".get_user_table_field("", "user_id")." = ?";
+        $stmt_update = $site_db->prepare($sql_update);
+        $stmt_update->execute([$row['user_id']]);
       }
     }
   }
 
+  // ✅ Modernized: Use Prepared Statement
   $sql = "DELETE FROM ".COMMENTS_TABLE."
-          WHERE image_id = $image_id";
-  $del_com = $site_db->query($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $del_com = $stmt->execute([$image_id]);
 
   if ($del_img) {
     $msg = $lang['image_delete_success'];
@@ -296,10 +327,13 @@ if ($action == "removeimage") {
   if (!$image_id || ($config['user_delete_image'] != 1 && $user_info['user_level'] != ADMIN)) {
     redirect($url);
   }
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT image_id, cat_id, user_id, image_name
           FROM ".IMAGES_TABLE."
-          WHERE image_id = $image_id";
-  $image_row = $site_db->query_firstrow($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$image_id]);
+  $image_row = $site_db->fetch_array($stmt->result);
   if (!$image_row || $image_row['user_id'] <= USER_AWAITING || ($user_info['user_id'] != $image_row['user_id'] && $user_info['user_level'] != ADMIN)) {
     show_error_page($lang['no_permission']);
     exit;
@@ -325,10 +359,13 @@ if ($action == "updateimage") {
   if (!$image_id || ($config['user_edit_image'] != 1 && $user_info['user_level'] != ADMIN)) {
     show_error_page($lang['no_permission']);
   }
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT image_id, cat_id, user_id, image_name
           FROM ".IMAGES_TABLE."
-          WHERE image_id = $image_id";
-  $image_row = $site_db->query_firstrow($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$image_id]);
+  $image_row = $site_db->fetch_array($stmt->result);
   if (!$image_row || $image_row['user_id'] <= USER_AWAITING || ($user_info['user_id'] != $image_row['user_id'] && $user_info['user_level'] != ADMIN)) {
     show_error_page($lang['no_permission']);
     exit;
@@ -380,10 +417,32 @@ if ($action == "updateimage") {
       }
     }
 
+    // ✅ Modernized: Use Prepared Statement
+    $params = [$image_name, $image_description, $image_keywords];
     $sql = "UPDATE ".IMAGES_TABLE."
-            SET image_name = '$image_name', image_description = '$image_description', image_keywords = '$image_keywords'".$additional_sql."
-            WHERE image_id = $image_id";
-    $result = $site_db->query($sql);
+            SET image_name = ?, image_description = ?, image_keywords = ?";
+    
+    // Handle additional fields
+    if (isset($_POST['image_allow_comments'])) {
+      $sql .= ", image_allow_comments = ?";
+      $params[] = intval($_POST['image_allow_comments']);
+    }
+    
+    if (!empty($additional_image_fields)) {
+      $table_fields = $site_db->get_table_fields(IMAGES_TABLE);
+      foreach ($additional_image_fields as $key => $val) {
+        if (isset($_POST[$key]) && isset($table_fields[$key])) {
+          $sql .= ", $key = ?";
+          $params[] = un_htmlspecialchars(trim($_POST[$key]));
+        }
+      }
+    }
+    
+    $sql .= " WHERE image_id = ?";
+    $params[] = $image_id;
+    
+    $stmt = $site_db->prepare($sql);
+    $result = $stmt->execute($params);
     if ($result) {
       include(ROOT_PATH.'includes/search_utils.php');
       $search_words = array();
@@ -417,10 +476,13 @@ if ($action == "editimage") {
       $additional_sql .= ", ".$key;
     }
   }
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT image_id, cat_id, user_id, image_name, image_description, image_keywords, image_allow_comments".$additional_sql."
           FROM ".IMAGES_TABLE."
-          WHERE image_id = $image_id";
-  $image_row = $site_db->query_firstrow($sql);
+          WHERE image_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$image_id]);
+  $image_row = $site_db->fetch_array($stmt->result);
   if (!$image_row || $image_row['user_id'] <= USER_AWAITING || ($user_info['user_id'] != $image_row['user_id'] && $user_info['user_level'] != ADMIN)) {
     redirect($url);
   }
@@ -632,11 +694,27 @@ if ($action == "uploadimage") {
 
       $current_time = time();
       if ($direct_upload) {
+        // ✅ Modernized: Use Prepared Statement
+        $params = [$cat_id, $user_info['user_id'], $image_name, $image_description, $image_keywords, $current_time, $image_active, $new_name, $new_thumb_name, $image_download_url, $image_allow_comments];
+        
         $sql = "INSERT INTO ".IMAGES_TABLE."
                 (cat_id, user_id, image_name, image_description, image_keywords, image_date, image_active, image_media_file, image_thumb_file, image_download_url, image_allow_comments".$additional_field_sql.")
                 VALUES
-                ($cat_id, ".$user_info['user_id'].", '$image_name', '$image_description', '$image_keywords', $current_time, $image_active, '$new_name', '$new_thumb_name', '$image_download_url', $image_allow_comments".$additional_value_sql.")";
-        $result = $site_db->query($sql);
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
+        
+        if (!empty($additional_image_fields)) {
+          $table_fields = $site_db->get_table_fields(IMAGES_TABLE);
+          foreach ($additional_image_fields as $key => $val) {
+            if (isset($_POST[$key]) && isset($table_fields[$key])) {
+              $sql .= ", ?";
+              $params[] = un_htmlspecialchars(trim($_POST[$key]));
+            }
+          }
+        }
+        $sql .= ")";
+        
+        $stmt = $site_db->prepare($sql);
+        $result = $stmt->execute($params);
         $image_id = $site_db->get_insert_id();
         if ($result) {
           include(ROOT_PATH.'includes/search_utils.php');
@@ -650,11 +728,28 @@ if ($action == "uploadimage") {
         }
       }
       else {
+        // ✅ Modernized: Use Prepared Statement
+        $params = [$cat_id, $user_info['user_id'], $image_name, $image_description, $image_keywords, $current_time, $new_name, $new_thumb_name, $image_download_url];
+        
         $sql = "INSERT INTO ".IMAGES_TEMP_TABLE."
                 (cat_id, user_id, image_name, image_description, image_keywords, image_date, image_media_file, image_thumb_file, image_download_url".$additional_field_sql.")
                 VALUES
-                ($cat_id, ".$user_info['user_id'].", '$image_name', '$image_description', '$image_keywords', $current_time, '$new_name', '$new_thumb_name', '$image_download_url'".$additional_value_sql.")";
-        $result = $site_db->query($sql);
+                (?, ?, ?, ?, ?, ?, ?, ?, ?";
+        
+        if (!empty($additional_image_fields)) {
+          $table = IMAGES_TEMP_TABLE;
+          $table_fields = $site_db->get_table_fields($table);
+          foreach ($additional_image_fields as $key => $val) {
+            if (isset($_POST[$key]) && isset($table_fields[$key])) {
+              $sql .= ", ?";
+              $params[] = un_htmlspecialchars(trim($_POST[$key]));
+            }
+          }
+        }
+        $sql .= ")";
+        
+        $stmt = $site_db->prepare($sql);
+        $result = $stmt->execute($params);
       }
 
       if ($config['upload_notify'] == 1 && !$direct_upload) {
@@ -999,17 +1094,22 @@ if ($action == "sendpassword") {
   $user_email = un_htmlspecialchars(trim($_POST['user_email']));
 
   if ($user_email != "") {
+    // ✅ Modernized: Use Prepared Statement
     $sql = "SELECT ".get_user_table_field("", "user_id").get_user_table_field(", ", "user_name").get_user_table_field(", ", "user_password")."
             FROM ".USERS_TABLE."
-            WHERE ".get_user_table_field("", "user_email")." = '$user_email'";
-    if ($checkuser = $site_db->query_firstrow($sql)) {
+            WHERE ".get_user_table_field("", "user_email")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$user_email]);
+    if ($checkuser = $site_db->fetch_array($stmt->result)) {
       $user_password = random_string(8);
       $user_password_hashed = salted_hash($user_password);
 
+      // ✅ Modernized: Use Prepared Statement
       $sql = "UPDATE ".USERS_TABLE."
-              SET ".get_user_table_field("", "user_password")." = '".$user_password_hashed."'
-              WHERE ".get_user_table_field("", "user_id")." = ".$checkuser[$user_table_fields['user_id']];
-      $site_db->query($sql);
+              SET ".get_user_table_field("", "user_password")." = ?
+              WHERE ".get_user_table_field("", "user_id")." = ?";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([$user_password_hashed, $checkuser[$user_table_fields['user_id']]]);
 
       // Start Emailer
       include(ROOT_PATH.'includes/email.php');
@@ -1068,7 +1168,11 @@ if ($action == "updateprofile") {
   $user_invisible = (isset($_POST['user_invisible'])) ? intval($_POST['user_invisible']) : 0;
 
   $error = 0;
-  if ($user_info['user_email'] != $user_email && $checkuser = $site_db->query_firstrow("SELECT ".get_user_table_field("", "user_id")." FROM ".USERS_TABLE." WHERE ".get_user_table_field("", "user_email")." = '$user_email' AND ".get_user_table_field("", "user_id")." <> '".$user_info['user_id']."'")) {
+  // ✅ Modernized: Use Prepared Statement
+  $sql_check = "SELECT ".get_user_table_field("", "user_id")." FROM ".USERS_TABLE." WHERE ".get_user_table_field("", "user_email")." = ? AND ".get_user_table_field("", "user_id")." <> ?";
+  $stmt_check = $site_db->prepare($sql_check);
+  $stmt_check->execute([$user_email, $user_info['user_id']]);
+  if ($user_info['user_email'] != $user_email && $checkuser = $site_db->fetch_array($stmt_check->result)) {
     if ($checkuser[$user_table_fields['user_id']] != $user_info['user_id']) {
       $msg .= (($msg != "") ? "<br />" : "").$lang['email_exists'];
       $error = 1;
@@ -1100,10 +1204,12 @@ if ($action == "updateprofile") {
   if (!$error && $user_email != $user_info['user_email'] && $user_info['user_level'] != ADMIN && $config['account_activation'] != 0) {
     $activationkey = get_random_key(USERS_TABLE, $user_table_fields['user_activationkey']);
 
+    // ✅ Modernized: Use Prepared Statement
     $sql = "UPDATE ".USERS_TABLE."
-            SET ".get_user_table_field("", "user_level")." = ".USER_AWAITING.", ".get_user_table_field("", "user_activationkey")." = '$activationkey'
-            WHERE ".get_user_table_field("", "user_id")." = ".$user_info['user_id'];
-    $result = $site_db->query($sql);
+            SET ".get_user_table_field("", "user_level")." = ?, ".get_user_table_field("", "user_activationkey")." = ?
+            WHERE ".get_user_table_field("", "user_id")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $result = $stmt->execute([USER_AWAITING, $activationkey, $user_info['user_id']]);
 
     if ($result) {
       $activation_url = $script_url."/register.php?action=activate&activationkey=".$activationkey;
@@ -1164,10 +1270,27 @@ if ($action == "updateprofile") {
       }
     }
 
+    // ✅ Modernized: Use Prepared Statement
+    $params = [$user_email, $user_showemail, $user_allowemails, $user_invisible, $user_homepage, $user_icq];
+    
     $sql = "UPDATE ".USERS_TABLE."
-            SET ".get_user_table_field("", "user_email")." = '$user_email', ".get_user_table_field("", "user_showemail")." = $user_showemail, ".get_user_table_field("", "user_allowemails")." = $user_allowemails, ".get_user_table_field("", "user_invisible")." = $user_invisible, ".get_user_table_field("", "user_homepage")." = '$user_homepage', ".get_user_table_field("", "user_icq")." = '$user_icq'".$additional_sql."
-            WHERE ".get_user_table_field("", "user_id")." = ".$user_info['user_id'];
-    $site_db->query($sql);
+            SET ".get_user_table_field("", "user_email")." = ?, ".get_user_table_field("", "user_showemail")." = ?, ".get_user_table_field("", "user_allowemails")." = ?, ".get_user_table_field("", "user_invisible")." = ?, ".get_user_table_field("", "user_homepage")." = ?, ".get_user_table_field("", "user_icq")." = ?";
+    
+    if (!empty($additional_user_fields)) {
+      $table_fields = $site_db->get_table_fields(USERS_TABLE);
+      foreach ($additional_user_fields as $key => $val) {
+        if (isset($_POST[$key]) && isset($table_fields[$key])) {
+          $sql .= ", $key = ?";
+          $params[] = un_htmlspecialchars(trim($_POST[$key]));
+        }
+      }
+    }
+    
+    $sql .= " WHERE ".get_user_table_field("", "user_id")." = ?";
+    $params[] = $user_info['user_id'];
+    
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute($params);
 
     $msg = $lang['update_profile_success'];
     if (!empty($new_email_msg)) {
@@ -1201,10 +1324,12 @@ if ($action == "updatepassword") {
   }
   if (!$error) {
     $user_password_hashed = salted_hash($user_password);
+    // ✅ Modernized: Use Prepared Statement
     $sql = "UPDATE ".USERS_TABLE."
-            SET ".get_user_table_field("", "user_password")." = '".$user_password_hashed."'
-            WHERE ".get_user_table_field("", "user_id")." = ".$user_info['user_id'];
-    $site_db->query($sql);
+            SET ".get_user_table_field("", "user_password")." = ?
+            WHERE ".get_user_table_field("", "user_id")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$user_password_hashed, $user_info['user_id']]);
 
     $msg = $lang['update_password_success'];
     $user_info = $site_sess->load_user_info($user_info['user_id']);

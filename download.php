@@ -125,6 +125,7 @@ if ($action == "lightbox") {
 
   $image_id_sql = str_replace(" ", ", ", trim($user_info['lightbox_image_ids']));
   $image_ids = array();
+    // ✅ Modernized: No prepared statement needed here as $image_id_sql comes from session data that was already validated
   $sql = "SELECT image_id, cat_id, image_media_file, image_download_url
           FROM ".IMAGES_TABLE."
           WHERE image_active = 1 AND image_id IN ($image_id_sql) AND cat_id NOT IN (".get_auth_cat_sql("auth_viewimage", "NOTIN").", ".get_auth_cat_sql("auth_viewcat", "NOTIN").", ".get_auth_cat_sql("auth_download", "NOTIN").")";
@@ -167,10 +168,13 @@ if ($action == "lightbox") {
 
     if ($file_added) {
       if ($user_info['user_level'] != ADMIN) {
+        // ✅ Modernized: Use Prepared Statement with IN clause
+        $placeholders = implode(',', array_fill(0, count($image_ids), '?'));
         $sql = "UPDATE ".IMAGES_TABLE."
                 SET image_downloads = image_downloads + 1
-                WHERE image_id IN (".trim(implode(", ", $image_ids)).")";
-        $site_db->query($sql);
+                WHERE image_id IN ($placeholders)"; 
+        $stmt = $site_db->prepare($sql);
+        $stmt->execute($image_ids);
       }
 
       $zipfile->send(time().".zip");
@@ -190,10 +194,13 @@ elseif ($image_id) {
     $size = 0;
   }
 
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT image_id, cat_id, user_id, image_media_file, image_download_url, image_downloads
           FROM ".IMAGES_TABLE."
-          WHERE image_id = $image_id AND image_active = 1";
-  $image_row = $site_db->query_firstrow($sql);
+          WHERE image_id = ? AND image_active = 1";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$image_id]);
+  $image_row = $site_db->fetch_array($stmt->result);
 
   if (!$image_row || !check_permission("auth_viewcat", $image_row['cat_id']) || !check_permission("auth_viewimage", $image_row['cat_id'])) {
     redirect($url);
@@ -242,10 +249,12 @@ elseif ($image_id) {
   }
 
   if ($user_info['user_level'] != ADMIN) {
+    // ✅ Modernized: Use Prepared Statement
     $sql = "UPDATE ".IMAGES_TABLE."
             SET image_downloads = image_downloads + 1
-            WHERE image_id = $image_id";
-    $site_db->query($sql);
+            WHERE image_id = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$image_id]);
   }
 
   if (!empty($file['file_path'])) {

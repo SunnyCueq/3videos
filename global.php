@@ -404,6 +404,7 @@ $site_db = new Db($db_host, $db_user, $db_password, $db_name);
 //-----------------------------------------------------
 //--- Generate Setting --------------------------------
 //-----------------------------------------------------
+// ✅ Modernized: Settings loading doesn't need prepared statements as there's no user input
 $sql = "SELECT setting_name, setting_value
         FROM ".SETTINGS_TABLE;
 $result = $site_db->query($sql);
@@ -506,6 +507,7 @@ if (defined("GET_CACHES")) {
     $order_by = in_array($config['cat_order'], $allowed_orders) ? $config['cat_order'] : 'cat_order';
     $sort_dir = in_array(strtoupper($config['cat_sort']), $allowed_sorts) ? strtoupper($config['cat_sort']) : 'ASC';
     
+    // ✅ Modernized: No user input, but SQL injection safe through whitelisting
     $sql = "SELECT cat_id, cat_name, cat_description, cat_parent_id, cat_hits, cat_order, auth_viewcat, auth_viewimage, auth_download, auth_upload, auth_directupload, auth_vote, auth_readcomment, auth_postcomment
           FROM ".CATEGORIES_TABLE."
           ORDER BY {$order_by} {$sort_dir}";
@@ -521,11 +523,14 @@ if (defined("GET_CACHES")) {
 
     $new_cutoff = time() - (60 * 60 * 24 * $config['new_cutoff']);
 
+    // ✅ Modernized: Use Prepared Statement
     $sql = "SELECT cat_id, COUNT(image_id) AS new_images
           FROM ".IMAGES_TABLE."
-          WHERE image_active = 1 AND image_date >= ".$new_cutoff."
+          WHERE image_active = 1 AND image_date >= ?
           GROUP BY cat_id";
-    $result = $site_db->query($sql);
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$new_cutoff]);
+    $result = $stmt->result;
 
     while ($row = $site_db->fetch_array($result)) {
         $new_image_cache[$row['cat_id']] = $row['new_images'];
@@ -534,6 +539,7 @@ if (defined("GET_CACHES")) {
 
     // --------------------------------------
 
+    // ✅ Modernized: No user input, safe query
     $sql = "SELECT cat_id, COUNT(*) AS num_images
           FROM ".IMAGES_TABLE."
           WHERE image_active = 1

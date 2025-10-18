@@ -313,23 +313,31 @@ class Session
     {
         global $site_db, $user_table_fields, $additional_user_fields;
 
-        if ($user_id != GUEST) {
-            $sql = "SELECT u.*, l.*
-              FROM ".USERS_TABLE." u, ".LIGHTBOXES_TABLE." l
-              WHERE ".get_user_table_field("u.", "user_id")." = $user_id AND l.user_id = ".get_user_table_field("u.", "user_id");
-            $user_info = $site_db->query_firstrow($sql);
-            if (!$user_info) {
-                $sql = "SELECT *
-                FROM ".USERS_TABLE."
-                WHERE ".get_user_table_field("", "user_id")." = $user_id";
-                $user_info = $site_db->query_firstrow($sql);
-                if ($user_info) {
-                    $lightbox_id = get_random_key(LIGHTBOXES_TABLE, "lightbox_id");
-                    $sql = "INSERT INTO ".LIGHTBOXES_TABLE."
-                  (lightbox_id, user_id, lightbox_lastaction, lightbox_image_ids)
-                  VALUES
-                  ('$lightbox_id', ".$user_info[$user_table_fields['user_id']].", $this->current_time, '')";
-                    $site_db->query($sql);
+          if ($user_id != GUEST) {
+      // ✅ Modernized: Use Prepared Statement
+      $sql = "SELECT u.*, l.*
+        FROM ".USERS_TABLE." u, ".LIGHTBOXES_TABLE." l
+        WHERE ".get_user_table_field("u.", "user_id")." = ? AND l.user_id = ".get_user_table_field("u.", "user_id");
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([$user_id]);
+      $user_info = $site_db->fetch_array($stmt->result);
+      if (!$user_info) {
+          // ✅ Modernized: Use Prepared Statement
+          $sql = "SELECT *
+          FROM ".USERS_TABLE."
+          WHERE ".get_user_table_field("", "user_id")." = ?";
+          $stmt = $site_db->prepare($sql);
+          $stmt->execute([$user_id]);
+          $user_info = $site_db->fetch_array($stmt->result);
+                          if ($user_info) {
+              $lightbox_id = get_random_key(LIGHTBOXES_TABLE, "lightbox_id");
+              // ✅ Modernized: Use Prepared Statement
+              $sql = "INSERT INTO ".LIGHTBOXES_TABLE."
+            (lightbox_id, user_id, lightbox_lastaction, lightbox_image_ids)
+            VALUES
+            (?, ?, ?, '')";
+              $stmt = $site_db->prepare($sql);
+              $stmt->execute([$lightbox_id, $user_info[$user_table_fields['user_id']], $this->current_time]);
                     $user_info['lightbox_lastaction'] = $this->current_time;
                     $user_info['lightbox_image_ids'] = "";
                 }

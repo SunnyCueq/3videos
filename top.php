@@ -49,7 +49,8 @@ if ($cache_page_top) {
 
 ob_start();
 
-$cat_match_sql = ($cat_id && check_permission("auth_viewcat", $cat_id)) ? "AND i.cat_id = '$cat_id' " : "";
+// ✅ Modernized: Safe integer casting for cat_id
+$cat_match_sql = ($cat_id && check_permission("auth_viewcat", $cat_id)) ? "AND i.cat_id = ".(int)$cat_id." " : "";
 $register_array = array();
 
 $cat_id_sql = get_auth_cat_sql("auth_viewcat", "NOTIN");

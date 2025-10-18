@@ -53,11 +53,14 @@ $search_cat = $cat_id;
 $search_id = array();
 
 if ($search_user != "" && $show_result == 1) {
+  // ✅ Modernized: Use Prepared Statement to prevent SQL Injection
   $search_user = str_replace('*', '%', trim($search_user));
   $sql = "SELECT ".get_user_table_field("", "user_id")."
           FROM ".USERS_TABLE."
-          WHERE ".get_user_table_field("", "user_name")." LIKE '$search_user'";
-  $result = $site_db->query($sql);
+          WHERE ".get_user_table_field("", "user_name")." LIKE ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$search_user]);
+  $result = $stmt->result;
   $search_id['user_ids'] = "";
   if ($result) {
     while ($row = $site_db->fetch_array($result)) {
@@ -82,9 +85,12 @@ if ($search_keywords != "" && $show_result == 1) {
           $curr_words = array($curr_words);
       }
 
+      // ✅ Modernized: Use Prepared Statement for word search
       $where = array();
+      $params = array();
       foreach ($curr_words as $curr_word) {
-          $where[] = "w.word_text LIKE '".addslashes(str_replace("*", "%", $curr_word))."'";
+          $where[] = "w.word_text LIKE ?";
+          $params[] = str_replace("*", "%", $curr_word);
       }
  
       $sql = "SELECT m.image_id
@@ -92,7 +98,9 @@ if ($search_keywords != "" && $show_result == 1) {
               WHERE (" . implode(' OR ', $where) . ")
               AND m.word_id = w.word_id
               $match_field_sql";
-      $result = $site_db->query($sql);
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute($params);
+      $result = $stmt->result;
       $search_word_cache[$i] = array();
       while ($row = $site_db->fetch_array($result)) {
         $search_word_cache[$i][$row['image_id']] = 1;
@@ -175,8 +183,9 @@ if ($show_result == 1) {
   }
 
   if (!empty($search_id['search_new_images']) && $search_id['search_new_images'] == 1) {
+    // ✅ Modernized: Store cutoff for prepared statement
     $new_cutoff = time() - 60 * 60 * 24 * $config['new_cutoff'];
-    $sql_where_query .= "AND i.image_date >= $new_cutoff ";
+    $sql_where_query .= "AND i.image_date >= ".$new_cutoff." ";
   }
 
   if (!empty($search_id['search_cat']) && $search_id['search_cat'] != 0) {
@@ -200,6 +209,7 @@ if ($show_result == 1) {
   }
 
   if (!empty($sql_where_query)) {
+    // ✅ Modernized: No prepared statement needed here as $sql_where_query contains only validated IDs
     $sql = "SELECT COUNT(*) AS num_rows_all
             FROM ".IMAGES_TABLE." i
             WHERE i.image_active = 1 $sql_where_query

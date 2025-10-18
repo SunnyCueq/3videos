@@ -112,8 +112,9 @@ elseif ($mode == "search") {
   }
 
   if (!empty($search_id['search_new_images']) && $search_id['search_new_images'] == 1) {
+    // ✅ Modernized: Safe integer casting
     $new_cutoff = time() - 60 * 60 * 24 * $config['new_cutoff'];
-    $sql_where_query .= "AND image_date >= $new_cutoff ";
+    $sql_where_query .= "AND image_date >= ".(int)$new_cutoff." ";
   }
 
   if (!empty($search_id['search_cat']) && $search_id['search_cat'] != 0) {
@@ -147,12 +148,19 @@ elseif ($mode == "search") {
   }
 }
 if (!$in_mode || empty($sql)) {
+  // ✅ Modernized: Use Prepared Statement
   $sql = "SELECT image_id, cat_id, image_name, image_media_file, image_thumb_file
           FROM ".IMAGES_TABLE."
-          WHERE image_active = 1 AND cat_id = $cat_id
+          WHERE image_active = 1 AND cat_id = ?
           ORDER BY ".$config['image_order']." ".$config['image_sort'].", image_id ".$config['image_sort'];
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$cat_id]);
+  $result = $stmt->result;
 }
-$result = $site_db->query($sql);
+else {
+  // ✅ No prepared statement needed - $sql contains validated IDs from session/cache
+  $result = $site_db->query($sql);
+}
 
 $image_id_cache = array();
 $next_prev_cache = array();
@@ -290,7 +298,11 @@ if ($action == "postcomment" && isset($_POST[URL_ID])) {
 
     $user_name_field = get_user_table_field("", "user_name");
     if (!empty($user_name_field)) {
-      if ($site_db->not_empty("SELECT $user_name_field FROM ".USERS_TABLE." WHERE $user_name_field = '".strtolower($user_name)."' AND ".get_user_table_field("", "user_id")." <> '".$user_info['user_id']."'")) {
+      // ✅ Modernized: Use Prepared Statement
+    $sql_check = "SELECT $user_name_field FROM ".USERS_TABLE." WHERE $user_name_field = ? AND ".get_user_table_field("", "user_id")." <> ?";
+    $stmt_check = $site_db->prepare($sql_check);
+    $stmt_check->execute([strtolower($user_name), $user_info['user_id']]);
+    if ($site_db->get_numrows($stmt_check->result) > 0) {
         $msg .= (($msg != "") ? "<br />" : "").$lang['username_exists'];
         $error = 1;
       }

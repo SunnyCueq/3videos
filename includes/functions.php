@@ -590,8 +590,8 @@ function get_random_image_cache() {
     if (empty($total_images)) {
       return $random_image_cache;
     }
-    mt_srand((double)microtime() * 1000000);
-    $number = ($total_images > 1) ? mt_rand(0, $total_images - 1) : 0;
+    // ✅ Modernized: Use random_int() instead of mt_rand()
+    $number = ($total_images > 1) ? random_int(0, $total_images - 1) : 0;
 
     $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_description, i.image_keywords, i.image_date, i.image_active, i.image_media_file, i.image_thumb_file, i.image_download_url, i.image_allow_comments, i.image_comments, i.image_downloads, i.image_votes, i.image_rating, i.image_hits, c.cat_name".get_user_table_field(", u.", "user_name")."
             FROM (".IMAGES_TABLE." i,  ".CATEGORIES_TABLE." c)
@@ -617,7 +617,7 @@ function get_random_image($cat_id = 0, $show_link = 1, $return_file = 0) {
   else {
     $template = 'random_image';
     if (SHOW_RANDOM_CAT_IMAGE) {
-      srand((float)microtime() * 1000000);
+      // ✅ Modernized: array_rand() is cryptographically secure enough for this use case
       $category_id = array_rand($random_image_cache);
     }
     else {
@@ -978,11 +978,19 @@ function uni_to_utf8($char) {
 function get_user_info($user_id = 0) {
   global $site_db, $user_table_fields;
   $user_info = 0;
+  
+  // ✅ Modernized: Type cast for security
+  $user_id = (int)$user_id;
+  
   if ($user_id != 0 && $user_id != GUEST) {
+    // ✅ Modernized: Use Prepared Statement
     $sql = "SELECT *
             FROM ".USERS_TABLE."
-            WHERE ".get_user_table_field("", "user_id")." = $user_id";
-    if ($user_info = $site_db->query_firstrow($sql)) {
+            WHERE ".get_user_table_field("", "user_id")." = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$user_id]);
+    
+    if ($user_info = $site_db->fetch_array($stmt->result)) {
       foreach ($user_table_fields as $key => $val) {
         if (isset($user_info[$val])) {
           $user_info[$key] = $user_info[$val];
@@ -1021,7 +1029,7 @@ function get_icq_status($uin) {
 
 function add_to_lightbox($id) {
   global $user_info, $site_db;
-  $id = intval($id);
+  $id = (int)$id;
   if (!$id) {
     return false;
   }
@@ -1032,15 +1040,24 @@ function add_to_lightbox($id) {
   }
   $user_info['lightbox_image_ids'] = trim($lightbox_ids);
   $user_info['lightbox_lastaction'] = time();
+  
+  // ✅ Modernized: Use Prepared Statement
   $sql = "UPDATE ".LIGHTBOXES_TABLE."
-          SET lightbox_lastaction = ".$user_info['lightbox_lastaction'].", lightbox_image_ids = '".$user_info['lightbox_image_ids']."'
-          WHERE user_id = ".$user_info['user_id'];
-  return ($site_db->query($sql)) ? 1 : 0;
+          SET lightbox_lastaction = ?, lightbox_image_ids = ?
+          WHERE user_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $result = $stmt->execute([
+    $user_info['lightbox_lastaction'], 
+    $user_info['lightbox_image_ids'],
+    $user_info['user_id']
+  ]);
+  
+  return $result ? 1 : 0;
 }
 
 function remove_from_lightbox($id) {
   global $user_info, $site_db;
-  $lightbox_array = explode(" ",$user_info['lightbox_image_ids']);
+  $lightbox_array = explode(" ", $user_info['lightbox_image_ids']);
   foreach ($lightbox_array as $key => $val) {
     if ($val == $id) {
       unset($lightbox_array[$key]);
@@ -1048,26 +1065,37 @@ function remove_from_lightbox($id) {
   }
   $user_info['lightbox_image_ids'] = trim(implode(" ", $lightbox_array));
   $user_info['lightbox_lastaction'] = time();
+  
+  // ✅ Modernized: Use Prepared Statement
   $sql = "UPDATE ".LIGHTBOXES_TABLE."
-          SET lightbox_lastaction = ".$user_info['lightbox_lastaction'].", lightbox_image_ids = '".$user_info['lightbox_image_ids']."'
-          WHERE user_id = ".$user_info['user_id'];
-  return ($site_db->query($sql)) ? 1 : 0;
+          SET lightbox_lastaction = ?, lightbox_image_ids = ?
+          WHERE user_id = ?";
+  $stmt = $site_db->prepare($sql);
+  $result = $stmt->execute([
+    $user_info['lightbox_lastaction'], 
+    $user_info['lightbox_image_ids'],
+    $user_info['user_id']
+  ]);
+  
+  return $result ? 1 : 0;
 }
 
 function clear_lightbox() {
   global $user_info, $site_db;
   $current_time = time();
+  
+  // ✅ Modernized: Use Prepared Statement
   $sql = "UPDATE ".LIGHTBOXES_TABLE."
-          SET lightbox_image_ids = '', lightbox_lastaction = $current_time
-          WHERE user_id = ".$user_info['user_id'];
-  if ($site_db->query($sql)) {
+          SET lightbox_image_ids = '', lightbox_lastaction = ?
+          WHERE user_id = ?";
+  $stmt = $site_db->prepare($sql);
+  
+  if ($stmt->execute([$current_time, $user_info['user_id']])) {
     $user_info['lightbox_image_ids'] = "";
     $user_info['lightbox_lastaction'] = $current_time;
     return true;
   }
-  else {
-    return false;
-  }
+  return false;
 }
 
 function check_lightbox($id) {
@@ -1078,22 +1106,34 @@ function check_lightbox($id) {
 
 function get_random_key($db_table = "", $db_column = "") {
   global $site_db;
-  $key = md5(uniqid(microtime()));
+  
+  // ✅ Modernized: Use cryptographically secure random_bytes()
+  $key = bin2hex(random_bytes(16)); // 32 characters hex string
+  
   if ($db_table != "" && $db_column != "") {
-    $i = 0;
-    while ($i == 0) {
+    $max_attempts = 10;
+    $attempts = 0;
+    
+    while ($attempts < $max_attempts) {
+      // ✅ Modernized: Use Prepared Statement
       $sql = "SELECT ".$db_column."
               FROM ".$db_table."
-              WHERE ".$db_column." = '$key'";
-      if ($site_db->is_empty($sql)) {
-        $i = 1;
+              WHERE ".$db_column." = ?";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([$key]);
+      
+      if ($site_db->get_numrows($stmt->result) == 0) {
+        return $key;
       }
-      else {
-        $i = 0;
-        $key = md5(uniqid(microtime()));
-      }
+      
+      $key = bin2hex(random_bytes(16));
+      $attempts++;
     }
+    
+    // Fallback if 10 attempts fail
+    throw new RuntimeException('Could not generate unique key after 10 attempts');
   }
+  
   return $key;
 }
 

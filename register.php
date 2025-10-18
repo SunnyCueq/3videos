@@ -158,7 +158,8 @@ if ($action == "register") {
 
     $current_time = time();
     $user_level = ($config['account_activation'] == 0) ? USER : USER_AWAITING;
-    $user_password_hashed = password_hash($user_password, PASSWORD_ARGON2ID);
+    // ✅ Use salted_hash() for consistency with existing system
+    $user_password_hashed = salted_hash($user_password);
     $placeholders = str_repeat(', ?', count($additional_params));
     $sql = "INSERT INTO ".USERS_TABLE."
             (".get_user_table_field("", "user_id").get_user_table_field(", ", "user_level").get_user_table_field(", ", "user_name").get_user_table_field(", ", "user_password").get_user_table_field(", ", "user_email").get_user_table_field(", ", "user_showemail").get_user_table_field(", ", "user_allowemails").get_user_table_field(", ", "user_invisible").get_user_table_field(", ", "user_joindate").get_user_table_field(", ", "user_activationkey").get_user_table_field(", ", "user_lastaction").get_user_table_field(", ", "user_lastvisit").get_user_table_field(", ", "user_comments").get_user_table_field(", ", "user_homepage").get_user_table_field(", ", "user_icq").$additional_field_sql.")

@@ -57,7 +57,8 @@ function csrf_token() {
     static $token;
 
     if (!$token) {
-        $token = md5(uniqid(mt_rand(), true));
+        // ✅ Modernized: Use bin2hex(random_bytes()) for cryptographically secure tokens
+        $token = bin2hex(random_bytes(32)); // 64 character hex string
         $session = $site_sess->get_session_var($csrf_protection_name);
         if (!is_array($session)) {
             $session = array();

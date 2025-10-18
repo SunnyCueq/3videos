@@ -52,20 +52,18 @@ function random_string($length, $letters_only = false) {
   $str = '';
 
   if (!$letters_only) {
-    while (strlen($str) <= $length) {
-      $str .= md5(uniqid(rand(), true));
-    }
-
-    return substr($str, 0, $length);
+    // ✅ Modernized: Use random_bytes() for cryptographically secure strings
+    return bin2hex(random_bytes((int) ceil($length / 2)));
   }
 
+  // ✅ Modernized: Use random_int() instead of mt_rand()
   for ($i = 0; $i < $length; $i++) {
-    switch (mt_rand(1, 2)) {
+    switch (random_int(1, 2)) {
       case 1:
-        $str .= chr(mt_rand(65, 90));
+        $str .= chr(random_int(65, 90)); // A-Z
         break;
       case 2:
-        $str .= chr(mt_rand(97, 122));
+        $str .= chr(random_int(97, 122)); // a-z
         break;
     }
   }
