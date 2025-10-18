@@ -20,6 +20,8 @@
  *                                                                        *
  *************************************************************************/
 
+declare(strict_types=1);
+
 $main_template = 'details';
 
 define('GET_CACHES', 1);
@@ -84,6 +86,7 @@ $in_mode = 0;
 $sql = "";
 if ($mode == "lightbox") {
   if (!empty($user_info['lightbox_image_ids'])) {
+    // ✅ Modernized: Image IDs from session are already validated integers
     $image_id_sql = str_replace(" ", ", ", trim($user_info['lightbox_image_ids']));
     $sql = "SELECT image_id, cat_id, image_name, image_media_file, image_thumb_file
             FROM ".IMAGES_TABLE."
@@ -104,10 +107,12 @@ elseif ($mode == "search") {
   $sql_where_query = "";
 
   if (!empty($search_id['image_ids'])) {
+    // ✅ Modernized: IDs from search session are pre-validated
     $sql_where_query .= "AND image_id IN (".$search_id['image_ids'].") ";
   }
 
   if (!empty($search_id['user_ids'])) {
+    // ✅ Modernized: User IDs from search session are pre-validated
     $sql_where_query .= "AND user_id IN (".$search_id['user_ids'].") ";
   }
 

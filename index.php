@@ -20,6 +20,8 @@
  *                                                                        *
  *************************************************************************/
 
+declare(strict_types=1);
+
 $templates_used = 'home,category_bit,whos_online,thumbnail_bit';
 $main_template = 'home';
 

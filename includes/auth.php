@@ -19,6 +19,9 @@
  *    (Licence.txt) for further information.                              *
  *                                                                        *
  *************************************************************************/
+
+declare(strict_types=1);
+
 if (!defined('ROOT_PATH')) {
   die("Security violation");
 }
@@ -87,13 +90,16 @@ function get_permission() {
             WHERE groupmatch_enddate <= $current_time AND groupmatch_enddate <> 0";
     $site_db->query($sql);
     */
+    // ✅ Modernized: Use Prepared Statement
     $sql = "SELECT a.cat_id, a.auth_viewcat, a.auth_viewimage, a.auth_download, a.auth_upload, a.auth_directupload, a.auth_vote, a.auth_readcomment, a.auth_postcomment
             FROM (".GROUP_ACCESS_TABLE." a, ".GROUP_MATCH_TABLE." m)
-            WHERE m.user_id = ".$user_info['user_id']."
+            WHERE m.user_id = ?
             AND a.group_id = m.group_id
-            AND m.groupmatch_startdate <= $current_time
-            AND (groupmatch_enddate > $current_time OR groupmatch_enddate = 0)";
-    $result = $site_db->query($sql);
+            AND m.groupmatch_startdate <= ?
+            AND (groupmatch_enddate > ? OR groupmatch_enddate = 0)";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$user_info['user_id'], $current_time, $current_time]);
+    $result = $stmt->result;
     while ($row = $site_db->fetch_array($result)) {
       $user_access[$row['cat_id']][] = $row;
     }

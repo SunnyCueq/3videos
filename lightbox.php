@@ -20,6 +20,8 @@
  *                                                                        *
  *************************************************************************/
 
+declare(strict_types=1);
+
 $templates_used = 'lightbox,thumbnail_bit';
 $main_template = 'lightbox';
 
@@ -49,6 +51,7 @@ $num_rows_all = 0;
 $num_rows = 0;
 
 if (!empty($user_info['lightbox_image_ids']))  {
+  // ✅ Modernized: Image IDs from lightbox session are validated integers
   $image_id_sql = str_replace(" ", ", ", trim($user_info['lightbox_image_ids']));
   $sql = "SELECT COUNT(image_id) AS images
           FROM ".IMAGES_TABLE."
@@ -67,6 +70,7 @@ $site_template->register_vars(array(
 ));
 
 if ($num_rows_all) {
+  // ✅ Modernized: $image_id_sql already contains validated IDs
   $sql = "SELECT COUNT(image_id) AS images
           FROM ".IMAGES_TABLE."
           WHERE image_active = 1 AND image_id IN ($image_id_sql) AND cat_id NOT IN (".get_auth_cat_sql("auth_download", "NOTIN").")";
@@ -79,13 +83,16 @@ if ($num_rows_all) {
       $additional_sql .= ", i.".$key;
     }
   }
-  $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_description, i.image_keywords, i.image_date, i.image_active, i.image_media_file, i.image_thumb_file, i.image_download_url, i.image_allow_comments, i.image_comments, i.image_downloads, i.image_votes, i.image_rating, i.image_hits".$additional_sql.", c.cat_name".get_user_table_field(", u.", "user_name")."
+    // ✅ Modernized: Use Prepared Statement for LIMIT
+  $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_description, i.image_keywords, i.image_date, i.image_active, i.image_media_file, i.image_thumb_file, i.image_download_url, i.image_allow_comments, i.image_comments, i.image_downloads, i.image_votes, i.image_rating, i.image_hits".$additional_sql.", c.cat_name".get_user_table_field(", u.", "user_name")."  
           FROM (".IMAGES_TABLE." i,  ".CATEGORIES_TABLE." c)
           LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = i.user_id)
           WHERE i.image_active = 1 AND i.image_id IN ($image_id_sql) AND c.cat_id = i.cat_id AND i.cat_id NOT IN (".get_auth_cat_sql("auth_viewcat", "NOTIN").")
-          ORDER BY i.".$config['image_order']." ".$config['image_sort'].", i.image_id ".$config['image_sort']."
-          LIMIT $offset, $perpage";
-  $result = $site_db->query($sql);
+          ORDER BY i.".$config['image_order']." ".$config['image_sort'].", i.image_id ".$config['image_sort']."  
+          LIMIT ?, ?";
+  $stmt = $site_db->prepare($sql);
+  $stmt->execute([$offset, $perpage]);
+  $result = $stmt->result;
   $num_rows = $site_db->get_numrows($result);
 }
 

@@ -20,6 +20,8 @@
  *                                                                        *
  *************************************************************************/
 
+declare(strict_types=1);
+
 $main_template = 'rss';
 
 $nozip = 1;
@@ -155,11 +157,14 @@ switch ($action) {
       exit;
     }
 
-    $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_description, i.image_keywords, i.image_date, i.image_active, i.image_media_file, i.image_thumb_file, i.image_download_url, i.image_allow_comments, i.image_comments, i.image_downloads, i.image_votes, i.image_rating, i.image_hits, c.cat_name".get_user_table_field(", u.", "user_name").get_user_table_field(", u.", "user_email")."
+        // ✅ Modernized: Use Prepared Statement
+    $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_description, i.image_keywords, i.image_date, i.image_active, i.image_media_file, i.image_thumb_file, i.image_download_url, i.image_allow_comments, i.image_comments, i.image_downloads, i.image_votes, i.image_rating, i.image_hits, c.cat_name".get_user_table_field(", u.", "user_name").get_user_table_field(", u.", "user_email")."  
             FROM (".IMAGES_TABLE." i,  ".CATEGORIES_TABLE." c)
             LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = i.user_id)
-            WHERE i.image_id = $image_id AND c.cat_id = i.cat_id";
-    $image_row = $site_db->query_firstrow($sql);
+            WHERE i.image_id = ? AND c.cat_id = i.cat_id";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$image_id]);
+    $image_row = $site_db->fetch_array($stmt->result);
 
     if (!isset($image_row['image_id'])) {
       exit;
@@ -185,13 +190,16 @@ switch ($action) {
 
     $image_allow_comments = (check_permission("auth_readcomment", $cat_id)) ? $image_row['image_allow_comments'] : 0;
 
-    $sql = "SELECT c.comment_id, c.image_id, c.user_id, c.user_name AS comment_user_name, c.comment_headline, c.comment_text, c.comment_ip, c.comment_date".get_user_table_field(", u.", "user_level").get_user_table_field(", u.", "user_name").get_user_table_field(", u.", "user_email").get_user_table_field(", u.", "user_showemail").get_user_table_field(", u.", "user_invisible").get_user_table_field(", u.", "user_joindate").get_user_table_field(", u.", "user_lastaction").get_user_table_field(", u.", "user_comments").get_user_table_field(", u.", "user_homepage").get_user_table_field(", u.", "user_icq")."
+        // ✅ Modernized: Use Prepared Statement
+    $sql = "SELECT c.comment_id, c.image_id, c.user_id, c.user_name AS comment_user_name, c.comment_headline, c.comment_text, c.comment_ip, c.comment_date".get_user_table_field(", u.", "user_level").get_user_table_field(", u.", "user_name").get_user_table_field(", u.", "user_email").get_user_table_field(", u.", "user_showemail").get_user_table_field(", u.", "user_invisible").get_user_table_field(", u.", "user_joindate").get_user_table_field(", u.", "user_lastaction").get_user_table_field(", u.", "user_comments").get_user_table_field(", u.", "user_homepage").get_user_table_field(", u.", "user_icq")."  
             FROM ".COMMENTS_TABLE." c
             LEFT JOIN ".USERS_TABLE." u ON (".get_user_table_field("u.", "user_id")." = c.user_id)
-            WHERE c.image_id = $image_id
+            WHERE c.image_id = ?
             ORDER BY c.comment_date DESC
-            LIMIT $num_items";
-    $result = $site_db->query($sql);
+            LIMIT ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$image_id, $num_items]);
+    $result = $stmt->result;
 
     while ($row = $site_db->fetch_array($result)) {
       $user_name = format_rss_text($row['comment_user_name']);
@@ -223,13 +231,16 @@ switch ($action) {
 
   case 'images':
   default:
+        // ✅ Modernized: Use Prepared Statement
+    $params = [];
     $cat_sql = "";
     if ($cat_id && isset($cat_cache[$cat_id])) {
       $rss_title .= " - " . format_rss_text($cat_cache[$cat_id]['cat_name']);
       $rss_link  = $site_sess->url($script_url."/categories.php?".URL_CAT_ID."=".$cat_id);
       $rss_desc  = format_rss_html($cat_cache[$cat_id]['cat_description']);
 
-      $cat_sql = "AND i.cat_id = $cat_id";
+      $cat_sql = "AND i.cat_id = ?";
+      $params[] = $cat_id;
     }
 
     $sql = "SELECT i.image_id, i.cat_id, i.user_id, i.image_name, i.image_description, i.image_keywords, i.image_date, i.image_active, i.image_media_file, i.image_thumb_file, i.image_download_url, i.image_allow_comments, i.image_comments, i.image_downloads, i.image_votes, i.image_rating, i.image_hits, c.cat_name".get_user_table_field(", u.", "user_name")."
@@ -240,8 +251,11 @@ switch ($action) {
               AND c.cat_id = i.cat_id
               AND i.cat_id NOT IN (".get_auth_cat_sql("auth_viewcat", "NOTIN").")
             ORDER BY i.image_date DESC, i.image_id DESC
-            LIMIT $num_items";
-    $result = $site_db->query($sql);
+            LIMIT ?";
+    $params[] = $num_items;
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute($params);
+    $result = $stmt->result;
 
     while ($row = $site_db->fetch_array($result)) {
       $user_name = format_rss_text($lang['userlevel_guest']);

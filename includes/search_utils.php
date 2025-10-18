@@ -19,6 +19,9 @@
  *    (Licence.txt) for further information.                              *
  *                                                                        *
  *************************************************************************/
+
+declare(strict_types=1);
+
 if (!defined('ROOT_PATH')) {
   die("Security violation");
 }
@@ -346,12 +349,15 @@ function remove_searchwords($image_ids_sql = "") {
     return false;
   }
 
+  // ✅ Modernized: Use Prepared Statement
   foreach (explode(',', $image_ids_sql) as $image_id) {
     $image_id = intval($image_id);
     $sql = "SELECT word_id
             FROM ".WORDMATCH_TABLE."
-            WHERE image_id = $image_id";
-    $result = $site_db->query($sql);
+            WHERE image_id = ?";
+    $stmt = $site_db->prepare($sql);
+    $stmt->execute([$image_id]);
+    $result = $stmt->result;
     $all_word_id_sql = "";
     while ($row = $site_db->fetch_array($result)) {
       $all_word_id_sql .= (($all_word_id_sql != "") ? ", " : "").$row['word_id'];
@@ -377,9 +383,11 @@ function remove_searchwords($image_ids_sql = "") {
         $site_db->query($sql);
       }
 
+      // ✅ Modernized: Use Prepared Statement
       $sql = "DELETE FROM ".WORDMATCH_TABLE."
-              WHERE image_id = $image_id";
-      $site_db->query($sql);
+              WHERE image_id = ?";
+      $stmt = $site_db->prepare($sql);
+      $stmt->execute([$image_id]);
     }
   }
 

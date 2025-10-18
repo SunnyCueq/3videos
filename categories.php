@@ -20,6 +20,8 @@
  *                                                                        *
  *************************************************************************/
 
+declare(strict_types=1);
+
 $templates_used = 'categories,category_bit,thumbnail_bit';
 $main_template = 'categories';
 
